@@ -1,0 +1,7 @@
+.gemini/
+.agents/
+*.log
+git_version.txt
+temp/
+tmp/
+node_modules/

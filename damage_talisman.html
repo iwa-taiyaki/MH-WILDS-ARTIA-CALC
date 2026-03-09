@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お守り検索 | Monster Hunter Wilds</title>
+    <link rel="icon" href="icon/MHWilds-Zoh_Shia_Icon.webp" type="image/webp">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Marcellus', 'Noto Serif JP', serif;
+            padding: 1.5rem;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, var(--color-bg-accent) 0%, var(--color-bg-dark) 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: var(--color-primary);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .back-links {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            opacity: 0.8;
+            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+            transform: translateX(-3px);
+            text-shadow: 0 0 10px var(--color-primary);
+        }
+
+        .search-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23d4af37%22%20d%3D%22M10.293%203.293L6%207.586%201.707%203.293A1%201%200%2000.293%204.707l5%205a1%201%200%20001.414%200l5-5a1%201%200%2010-1.414-1.414z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 2.5rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* ===== Talisman Card Redesign (MH Wilds Style) ===== */
+        .talisman-card {
+            background: linear-gradient(135deg, rgba(82, 87, 60, 0.95) 0%, rgba(45, 50, 30, 0.98) 100%);
+            border: 2px solid #6b774a;
+            border-radius: 4px;
+            padding: 0.8rem;
+            color: #f0f0e0;
+            box-shadow: 2px 4px 15px rgba(0, 0, 0, 0.4);
+            transition: var(--transition-slow);
+            position: relative;
+        }
+
+        .talisman-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            border-color: #8c9c64;
+        }
+
+        /* CARD HEADER */
+        .tc-header {
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tc-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0.3rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .tc-icon-placeholder {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .tc-sub {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: bold;
+        }
+
+        /* Rarity Colors */
+        .tc-rare {
+            color: #5dade2;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .tc-rare.ra5 {
+            color: #a9dfbf;
+        }
+
+        .tc-rare.ra6 {
+            color: #5dade2;
+        }
+
+        .tc-rare.ra7 {
+            color: #af7ac5;
+        }
+
+        .tc-rare.ra8 {
+            color: #f4d03f;
+        }
+
+        /* SLOTS ROW */
+        .tc-slot-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.4rem 0.6rem;
+            border-radius: 3px;
+            margin-bottom: 0.8rem;
+        }
+
+        .tc-slot-label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .tc-slot-icons {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .slot-diamond {
+            width: 18px;
+            height: 18px;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            background: rgba(255, 255, 255, 0.3);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .slot-empty {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: bold;
+        }
+
+        /* EQUIP SKILL SECTION */
+        .tc-skills-title {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            color: #d4af37;
+            margin-bottom: 0.6rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .tc-skills-title::before {
+            content: '';
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            background: #d4af37;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            mask: radial-gradient(circle, transparent 30%, black 35%);
+            box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        }
+
+        .tc-skills-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0;
+        }
+
+        .tc-skill-item {
+            display: flex;
+            background-image: url('icon/talisman_skill_bg.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            padding: 0.5rem 1rem 0.6rem 0.8rem;
+            margin-bottom: 1px;
+            align-items: flex-start;
+            position: relative;
+            border: none;
+            min-height: 54px;
+        }
+
+        .tc-skill-icon-frame {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-right: 0.8rem;
+            flex-shrink: 0;
+            background: rgba(30, 30, 20, 0.8);
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            border: 1px solid #5a5a4a;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .tc-skill-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 2px #000);
+            z-index: 2;
+        }
+
+        .tc-skill-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 2px;
+        }
+
+        .tc-skill-name-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 4px;
+            line-height: 1;
+        }
+
+        .tc-skill-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 2px 2px 2px #000;
+            letter-spacing: 0.02em;
+        }
+
+        .tc-skill-lv {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 2px 2px 2px #000;
+            font-family: serif;
+        }
+
+        .tc-skill-squares {
+            display: flex;
+            gap: 3px;
+        }
+
+        .sq-fill {
+            width: 14px;
+            height: 14px;
+            background-image: url('icon/skill_level_unit.png');
+            background-size: 500% 100%;
+            background-position: 0% 0%;
+            filter: drop-shadow(0 0 3px rgba(255, 200, 0, 0.5));
+        }
+
+        .sq-empty {
+            width: 14px;
+            height: 14px;
+            background-image: url('icon/skill_level_unit.png');
+            background-size: 500% 100%;
+            background-position: 100% 0%;
+            opacity: 0.6;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 3rem;
+            display: none;
+            color: var(--color-primary);
+            font-family: 'Marcellus', serif;
+            letter-spacing: 0.2rem;
+            animation: pulse 2s infinite;
+        }
+
+        /* Premium Filter Styling */
+        details.premium-filter {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        details.premium-filter summary {
+            padding: 1rem;
+            cursor: pointer;
+            color: var(--color-primary);
+            font-weight: bold;
+            font-family: 'Marcellus', serif;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(212, 175, 55, 0.05);
+            transition: background 0.2s;
+        }
+
+        details.premium-filter summary:hover {
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        details.premium-filter summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.premium-filter summary::after {
+            content: '▼';
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+
+        details.premium-filter[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .filter-body {
+            padding: 1.5rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 5rem;
+            color: var(--color-text-muted);
+            grid-column: 1/-1;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="back-links">
+            <a href="index.html" class="back-link">← 計算機へ戻る</a>
+            <a href="talisman.html" class="back-link">お守りリストへ</a>
+        </div>
+        <header>
+            <h1>お守り検索</h1>
+            <p style="color: var(--color-text-muted); font-size: 0.85rem;">ダメージに関わるスキルのみを抽出した理想個体検索</p>
+        </header>
+
+        <section class="glass-card" style="padding: 0; margin-bottom: 1.5rem;">
+            <details class="premium-filter" open>
+                <summary>絞り込み条件を詳細設定</summary>
+                <div class="filter-body">
+                    <div class="search-controls">
+                        <!-- Controls remain as is -->
+                        <div class="input-group">
+                            <label>レア度</label>
+                            <select id="rare-select">
+                                <option value="any">全レア度</option>
+                                <option value="5">RARE 5 (抽選 1-6-6)</option>
+                                <option value="6">RARE 6 (抽選 2-6-6など)</option>
+                                <option value="7">RARE 7 (抽選 3-6-5など)</option>
+                                <option value="8">RARE 8 (生産 武器スロット)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>第1スキル</label>
+                            <select id="skill1-select">
+                                <option value="any">指定なし</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>第2スキル</label>
+                            <select id="skill2-select">
+                                <option value="any">指定なし</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>第3スキル</label>
+                            <select id="skill3-select">
+                                <option value="any">指定なし</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>スロット</label>
+                            <select id="slot-select">
+                                <option value="any">指定なし</option>
+                                <option value="①①">①①</option>
+                                <option value="②">②</option>
+                                <option value="②①">②①</option>
+                                <option value="③">③</option>
+                                <option value="W①">W①</option>
+                                <option value="W①①">W①①</option>
+                                <option value="W①①①">W①①①</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <button id="btn-search" class="btn-primary" style="width: 100%; height: 42px;">検索実行</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--color-text-muted); margin-top: 1rem;">
+                        ※全組み合わせから条件に合致する個体を抽出します。（表示件数には上限があります）
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <div id="loading">理想的な組み合わせを一意に生成中...</div>
+
+        <div class="results-grid" id="results-grid">
+            <div class="empty-state">条件を指定して検索してください。</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { TALISMAN_GROUPS, TALISMAN_SLOTS, TALISMAN_COMBINATIONS } from './js/data/talisman.js';
+        import { DAMAGE_RELATED_SKILLS } from './js/data/damage_skills.js';
+        import { SKILLS } from './js/data/skills.js';
+        import { SKILL_ICON_MAP } from './js/data/skill_icons.js';
+
+        const resultsGrid = document.getElementById('results-grid');
+        const skill1Select = document.getElementById('skill1-select');
+        const skill2Select = document.getElementById('skill2-select');
+        const skill3Select = document.getElementById('skill3-select');
+        const rareSelect = document.getElementById('rare-select');
+        const slotSelect = document.getElementById('slot-select');
+        const btnSearch = document.getElementById('btn-search');
+        const loading = document.getElementById('loading');
+
+        const skillMasterMap = new Map();
+        SKILLS.forEach((s, idx) => skillMasterMap.set(s.name, idx));
+
+        function getSortedSkillsForGroup(gid) {
+            const list = TALISMAN_GROUPS[gid] || [];
+            return [...list].sort((a, b) => {
+                const idxA = skillMasterMap.has(a.name) ? skillMasterMap.get(a.name) : 10000;
+                const idxB = skillMasterMap.has(b.name) ? skillMasterMap.get(b.name) : 10000;
+                if (idxA !== idxB) return idxA - idxB;
+                // If same master index or both missing, fallback to Alphabetical
+                if (idxA === 10000) return a.name.localeCompare(b.name) || a.level - b.level;
+                return a.level - b.level;
+            });
+        }
+
+        function populateSelectWithGroups(selectEl, groupIds, excludeSkillNames = []) {
+            const currentValue = selectEl.value;
+            selectEl.innerHTML = '<option value="any">指定なし</option>';
+            const sortedGIDs = Array.from(groupIds).sort((a, b) => a - b);
+
+            sortedGIDs.forEach(gid => {
+                const skills = getSortedSkillsForGroup(gid).filter(s => !excludeSkillNames.includes(s.name));
+                if (skills.length === 0) return;
+
+                // Header
+                const header = document.createElement('option');
+                header.disabled = true;
+                header.textContent = `--- グループ ${gid} ---`;
+                header.style.background = '#1a1b1e';
+                header.style.color = '#888';
+                header.style.textAlign = 'center';
+                selectEl.appendChild(header);
+
+                // Skills
+                skills.forEach(s => {
+                    const el = document.createElement('option');
+                    el.value = `${s.name}|${s.level}`;
+                    el.textContent = `${s.name} Lv${s.level}`;
+                    selectEl.appendChild(el);
+                });
+            });
+
+            // Restore value if still valid
+            if (Array.from(selectEl.options).some(opt => opt.value === currentValue)) {
+                selectEl.value = currentValue;
+            } else {
+                selectEl.value = 'any';
+            }
+        }
+
+        function updateSkill1Dropdown() {
+            const rareVal = rareSelect.value;
+            let possibleGroups = new Set();
+            TALISMAN_COMBINATIONS.forEach(p => {
+                if (rareVal === 'any' || p.rare == rareVal) {
+                    possibleGroups.add(p.s1);
+                }
+            });
+
+            populateSelectWithGroups(skill1Select, possibleGroups);
+
+            skill2Select.innerHTML = '<option value="any">指定なし</option>';
+            skill3Select.innerHTML = '<option value="any">指定なし</option>';
+            updateSkill2Dropdown();
+        }
+
+        function updateSkill2Dropdown() {
+            const rareVal = rareSelect.value;
+            const s1Key = skill1Select.value;
+            const excludeNames = [];
+            if (s1Key !== 'any') excludeNames.push(s1Key.split('|')[0]);
+
+            let possibleGroups = new Set();
+            TALISMAN_COMBINATIONS.forEach(p => {
+                if (rareVal === 'any' || p.rare == rareVal) {
+                    const s1Match = s1Key === 'any' || (TALISMAN_GROUPS[p.s1] && TALISMAN_GROUPS[p.s1].some(s => `${s.name}|${s.level}` === s1Key));
+                    if (s1Match) possibleGroups.add(p.s2);
+                }
+            });
+
+            populateSelectWithGroups(skill2Select, possibleGroups, excludeNames);
+            updateSkill3Dropdown();
+        }
+
+        function updateSkill3Dropdown() {
+            const rareVal = rareSelect.value;
+            const s1Key = skill1Select.value;
+            const s2Key = skill2Select.value;
+            const excludeNames = [];
+            if (s1Key !== 'any') excludeNames.push(s1Key.split('|')[0]);
+            if (s2Key !== 'any') excludeNames.push(s2Key.split('|')[0]);
+
+            let possibleGroups = new Set();
+            TALISMAN_COMBINATIONS.forEach(p => {
+                if (rareVal === 'any' || p.rare == rareVal) {
+                    const s1Match = s1Key === 'any' || (TALISMAN_GROUPS[p.s1] && TALISMAN_GROUPS[p.s1].some(s => `${s.name}|${s.level}` === s1Key));
+                    const s2Match = s2Key === 'any' || (TALISMAN_GROUPS[p.s2] && TALISMAN_GROUPS[p.s2].some(s => `${s.name}|${s.level}` === s2Key));
+                    if (s1Match && s2Match && p.s3) {
+                        possibleGroups.add(p.s3);
+                    }
+                }
+            });
+
+            populateSelectWithGroups(skill3Select, possibleGroups, excludeNames);
+            updateSlotDropdown();
+        }
+
+        function updateSlotDropdown() {
+            const rareVal = rareSelect.value;
+            const s1Key = skill1Select.value;
+            const s2Key = skill2Select.value;
+            const s3Key = skill3Select.value;
+
+            let possibleSlots = new Set();
+            TALISMAN_COMBINATIONS.forEach(p => {
+                if (rareVal === 'any' || p.rare == rareVal) {
+                    const s1Match = s1Key === 'any' || (TALISMAN_GROUPS[p.s1] && TALISMAN_GROUPS[p.s1].some(s => `${s.name}|${s.level}` === s1Key));
+                    const s2Match = s2Key === 'any' || (TALISMAN_GROUPS[p.s2] && TALISMAN_GROUPS[p.s2].some(s => `${s.name}|${s.level}` === s2Key));
+                    const s3Match = s3Key === 'any' || (p.s3 && TALISMAN_GROUPS[p.s3] && TALISMAN_GROUPS[p.s3].some(s => `${s.name}|${s.level}` === s3Key));
+
+                    if (s1Match && s2Match && (s3Key === 'any' || s3Match)) {
+                        const slots = TALISMAN_SLOTS[`RARE${p.rare}`] || [];
+                        slots.forEach(sl => possibleSlots.add(sl));
+                    }
+                }
+            });
+
+            const currentSlot = slotSelect.value;
+            slotSelect.innerHTML = '<option value="any">指定なし</option>';
+            Array.from(possibleSlots).forEach(slot => {
+                const opt = document.createElement('option');
+                opt.value = slot;
+                opt.textContent = slot;
+                if (slot === 'W①' || slot === 'W①①' || slot === 'W①①①') opt.textContent += ' (武器スロット)';
+                slotSelect.appendChild(opt);
+            });
+            if (possibleSlots.has(currentSlot)) slotSelect.value = currentSlot;
+        }
+
+        rareSelect.onchange = updateSkill1Dropdown;
+        skill1Select.onchange = updateSkill2Dropdown;
+        skill2Select.onchange = updateSkill3Dropdown;
+        skill3Select.onchange = updateSlotDropdown;
+
+        function performSearch() {
+            resultsGrid.innerHTML = '';
+            loading.style.display = 'block';
+
+            const targetS1Key = skill1Select.value;
+            const targetS2Key = skill2Select.value;
+            const targetS3Key = skill3Select.value;
+            const targetRare = rareSelect.value;
+            const targetSlot = slotSelect.value;
+
+            setTimeout(() => {
+                const results = [];
+                const maxResults = 300;
+
+                const patterns = targetRare === 'any'
+                    ? TALISMAN_COMBINATIONS
+                    : TALISMAN_COMBINATIONS.filter(p => p.rare == targetRare);
+
+                for (const p of patterns) {
+                    const g1 = TALISMAN_GROUPS[p.s1] || [];
+                    const g2 = TALISMAN_GROUPS[p.s2] || [];
+                    const g3 = p.s3 ? (TALISMAN_GROUPS[p.s3] || []) : [{ name: '-', level: '' }];
+                    const slots = TALISMAN_SLOTS[`RARE${p.rare}`] || [];
+
+                    for (const s1 of g1) {
+                        if (targetS1Key !== 'any' && `${s1.name}|${s1.level}` !== targetS1Key) continue;
+
+                        for (const s2 of g2) {
+                            if (s2.name !== '-' && s1.name !== '-' && s2.name === s1.name) continue;
+                            if (targetS2Key !== 'any' && `${s2.name}|${s2.level}` !== targetS2Key) continue;
+
+                            for (const s3 of g3) {
+                                if (s3.name !== '-' && (s3.name === s1.name || s3.name === s2.name)) continue;
+                                if (targetS3Key !== 'any' && `${s3.name}|${s3.level}` !== targetS3Key) continue;
+
+                                for (const slot of slots) {
+                                    if (targetSlot !== 'any' && slot !== targetSlot) continue;
+
+                                    results.push({
+                                        rare: p.rare,
+                                        skills: [s1, s2, s3].filter(s => s.name !== '-'),
+                                        slot: slot
+                                    });
+
+                                    if (results.length >= maxResults) break;
+                                }
+                                if (results.length >= maxResults) break;
+                            }
+                            if (results.length >= maxResults) break;
+                        }
+                        if (results.length >= maxResults) break;
+                    }
+                    if (results.length >= maxResults) break;
+                }
+
+                loading.style.display = 'none';
+                if (results.length === 0) {
+                    resultsGrid.innerHTML = '<div class="empty-state">該当する組み合わせが見つかりませんでした。条件をゆるめてお試しください。</div>';
+                } else {
+                    renderResults(results);
+                }
+            }, 100);
+        }
+
+        function renderResults(results) {
+            results.forEach(res => {
+                const card = document.createElement('div');
+                card.className = 'talisman-card';
+
+                // -- Render Skills --
+                let skillsHtml = '';
+                res.skills.forEach(s => {
+                    const isDamage = DAMAGE_RELATED_SKILLS.includes(s.name);
+
+                    // Determine Max Level & Icon Category
+                    let maxLvl = 3; // fallback 
+                    let iconCat = 'placeholder';
+                    const mSkill = SKILLS.find(x => x.name === s.name);
+                    if (mSkill) {
+                        if (mSkill.maxLevel) maxLvl = mSkill.maxLevel;
+                        if (mSkill.id && SKILL_ICON_MAP[mSkill.id]) {
+                            iconCat = SKILL_ICON_MAP[mSkill.id].toLowerCase();
+                        }
+                    }
+                    // For known non-damage skills if missing in SKILLS
+                    if (s.name === '砲弾装填') { maxLvl = 2; iconCat = 'reinforce_skill'; }
+                    if (s.name === '地質学' || s.name === '氷耐性') { maxLvl = 3; iconCat = 'gathering_skill'; }
+
+                    // Bound checks
+                    const actualLvl = Math.min(parseInt(s.level, 10), maxLvl);
+
+                    let squaresHtml = '';
+                    for (let i = 0; i < maxLvl; i++) {
+                        if (i < actualLvl) squaresHtml += '<div class="sq-fill"></div>';
+                        else squaresHtml += '<div class="sq-empty"></div>';
+                    }
+
+                    // For the skill icon, we'll use a placeholder structure if not found, or an img if found
+                    const iconEl = iconCat !== 'placeholder'
+                        ? `<img src="icon/skills/${iconCat}.webp" class="tc-skill-icon" onerror="this.src='icon/skills/${iconCat}.png'; this.onerror='';">`
+                        : `<div class="tc-skill-icon"></div>`;
+
+                    skillsHtml += `
+                        <div class="tc-skill-item">
+                            <div class="tc-skill-icon-frame">
+                                ${iconEl}
+                            </div>
+                            <div class="tc-skill-content">
+                                <div class="tc-skill-name-row">
+                                    <span class="tc-skill-name">${s.name}</span>
+                                    <span class="tc-skill-lv">Lv${actualLvl}</span>
+                                </div>
+                                <div class="tc-skill-squares">
+                                    ${squaresHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // -- Render Slots --
+                let slotsHtml = '';
+                if (res.slot === 'any' || !res.slot || res.slot === '-') {
+                    slotsHtml = `<div class="slot-empty">-</div><div class="slot-empty">-</div><div class="slot-empty">-</div>`;
+                } else if (res.slot.includes('W')) {
+                    const count = (res.slot.match(/①/g) || []).length;
+                    for (let i = 0; i < 3; i++) {
+                        if (i < count) slotsHtml += `<div class="slot-diamond" style="background:rgba(255,200,100,0.3);">W</div>`;
+                        else slotsHtml += `<div class="slot-empty">-</div>`;
+                    }
+                } else {
+                    const chars = res.slot.split('');
+                    let slotVals = [];
+                    for (let c of chars) {
+                        if (c === '①') slotVals.push(1);
+                        if (c === '②') slotVals.push(2);
+                        if (c === '③') slotVals.push(3);
+                        if (c === '④') slotVals.push(4);
+                    }
+                    for (let i = 0; i < 3; i++) {
+                        if (slotVals[i]) slotsHtml += `<div class="slot-diamond">${slotVals[i]}</div>`;
+                        else slotsHtml += `<div class="slot-empty">-</div>`;
+                    }
+                }
+
+                // -- Talisman Name & Slots row --
+                let talismanName = "未解の護石";
+                if (res.rare == 6) talismanName = "史伝の護石";
+                if (res.rare == 7) talismanName = "秘歴の護石";
+                if (res.rare == 8) talismanName = "栄世の護石";
+
+                let slotRowHtml = '';
+                if (res.rare == 8 && res.slot === 'W①①①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare8_slots.png" alt="レア8スロット" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 8 && res.slot === 'W①①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare8_slots_w11.png" alt="レア8スロットW11" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 8 && res.slot === 'W①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare8_slots_w1.png" alt="レア8スロットW1" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if ((res.rare == 7 || res.rare == 5) && res.slot === '③') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare7_slots_3.png" alt="スロット3" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 7 && res.slot === '②') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare7_slots_2.png" alt="レア7スロット2" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 7 && res.slot === '①①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare7_slots_11.png" alt="レア7スロット11" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 7 && res.slot === '①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare7_slots_1.png" alt="レア7スロット1" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if ((res.rare == 6 || res.rare == 5) && res.slot === '②①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare6_slots_21.png" alt="スロット21" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if ((res.rare == 6 || res.rare == 5) && res.slot === '②') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare6_slots_2.png" alt="スロット2" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if ((res.rare == 6 || res.rare == 5) && res.slot === '①①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare6_slots_11.png" alt="スロット11" style="width: 100%; height: auto; display: block;"></div>`;
+                } else if (res.rare == 6 && res.slot === '①') {
+                    slotRowHtml = `<div style="margin-bottom: 0.8rem; overflow: hidden; border-radius: 3px; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 0 5px rgba(0,0,0,0.5), 0 4px 6px rgba(0,0,0,0.4);"><img src="icon/rare6_slots_1.png" alt="レア6スロット1" style="width: 100%; height: auto; display: block;"></div>`;
+                } else {
+                    slotRowHtml = `
+                    <div class="tc-slot-row">
+                        <div class="tc-slot-label">
+                            <span class="tc-icon-placeholder" style="width:18px;height:18px;"></span>
+                            <span style="margin-left:4px;">スロット</span>
+                        </div>
+                        <div class="tc-slot-icons">
+                            ${slotsHtml}
+                        </div>
+                    </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="tc-header">
+                        <div class="tc-title">
+                            <span class="tc-icon-placeholder"></span>
+                            <span>${talismanName}</span>
+                        </div>
+                        <div class="tc-sub">
+                            <span class="tc-level">Lv 1/1</span>
+                            <span class="tc-rare ra${res.rare}">RARE ${res.rare}</span>
+                        </div>
+                    </div>
+                    
+                    ${slotRowHtml}
+                    
+                    <div class="tc-skills-title">
+                        <span class="tc-icon-placeholder" style="width:18px;height:18px;"></span>
+                        <span style="margin-left:4px;">装備スキル</span>
+                    </div>
+                    
+                    <div class="tc-skills-list">
+                        ${skillsHtml}
+                    </div>
+                `;
+                resultsGrid.appendChild(card);
+            });
+        }
+
+        btnSearch.onclick = performSearch;
+        updateSkill1Dropdown();
+    </script>
+</body>
+
+</html>

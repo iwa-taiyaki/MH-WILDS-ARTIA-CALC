@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MH Wilds アーティア計算機 | データベース</title>
+    <link rel="icon" href="icon/MHWilds-Zoh_Shia_Icon.webp" type="image/webp">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Marcellus', 'Noto Serif JP', serif;
+        }
+
+        .db-section {
+            background: rgba(255, 215, 0, 0.05);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+        }
+
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .db-table th,
+        .db-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.6rem;
+            text-align: left;
+        }
+
+        .db-table th {
+            background: rgba(212, 175, 55, 0.2);
+            color: var(--color-primary);
+        }
+
+        .nav-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid var(--color-primary);
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background: var(--color-primary);
+            color: var(--color-bg-dark);
+        }
+
+        .db-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .db-sidebar {
+            width: 250px;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .db-nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .db-nav-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .db-nav-list a {
+            display: block;
+            color: var(--color-text-main);
+            text-decoration: none;
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .db-nav-list a:hover {
+            background: rgba(212, 175, 55, 0.1);
+            border-left-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        #nav-motions-sublist a,
+        #nav-monsters-sublist a,
+        #nav-skills-sublist a {
+            padding: 0.2rem 0.6rem;
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            border-left: 2px solid transparent;
+        }
+
+        #nav-motions-sublist a:hover,
+        #nav-monsters-sublist a:hover,
+        #nav-skills-sublist a:hover {
+            color: var(--color-primary);
+            border-left-color: var(--color-primary);
+        }
+
+        .db-main-content {
+            flex-grow: 1;
+            min-width: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav class="section-container"
+            style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+            <div class="logo font-accent"
+                style="font-size: 1.2rem; color: var(--color-primary); display: flex; align-items: center; gap: 0.5rem;">
+                <img src="icon/MHWilds-Zoh_Shia_Icon.webp" alt="Site Logo"
+                    style="width: 24px; height: 24px; object-fit: contain;">
+                MH WILDS ARTIA DATABASE
+            </div>
+            <div>
+                <a href="index.html" class="nav-link">計算機に戻る</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="db-layout section-container">
+        <aside class="db-sidebar">
+            <h3
+                style="color: var(--color-primary); margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 0.5rem;">
+                目次</h3>
+            <ul class="db-nav-list">
+                <li><a href="#section-formulas">ダメージ計算式</a></li>
+                <li><a href="#section-excitation">激化タイプ上昇値</a></li>
+                <li>
+                    <details>
+                        <summary
+                            style="cursor: pointer; padding: 0.5rem 0.8rem; color: var(--color-primary); transition: all 0.2s; border-radius: 4px; user-select: none;"
+                            onmouseover="this.style.background='rgba(212, 175, 55, 0.1)'"
+                            onmouseout="this.style.background='transparent'">
+                            肉質データ
+                        </summary>
+                        <ul id="nav-monsters-sublist" class="db-nav-list"
+                            style="padding-left: 1rem; margin-top: 0.2rem; font-size: 0.85rem;">
+                            <!-- JS populated -->
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary
+                            style="cursor: pointer; padding: 0.5rem 0.8rem; color: var(--color-primary); transition: all 0.2s; border-radius: 4px; user-select: none;"
+                            onmouseover="this.style.background='rgba(212, 175, 55, 0.1)'"
+                            onmouseout="this.style.background='transparent'">
+                            スキル詳細
+                        </summary>
+                        <ul id="nav-skills-sublist" class="db-nav-list"
+                            style="padding-left: 1rem; margin-top: 0.2rem; font-size: 0.85rem;">
+                            <!-- JS populated -->
+                        </ul>
+                    </details>
+                </li>
+                <li>
+                    <details>
+                        <summary
+                            style="cursor: pointer; padding: 0.5rem 0.8rem; color: var(--color-primary); transition: all 0.2s; border-radius: 4px; user-select: none;"
+                            onmouseover="this.style.background='rgba(212, 175, 55, 0.1)'"
+                            onmouseout="this.style.background='transparent'">
+                            モーション値・属性補正
+                        </summary>
+                        <ul id="nav-motions-sublist" class="db-nav-list"
+                            style="padding-left: 1rem; margin-top: 0.2rem; font-size: 0.85rem;">
+                            <!-- JS populated -->
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="db-main-content">
+            <h1 style="font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--color-text-main);">データベース・計算式</h1>
+
+            <details id="section-formulas" class="db-section" open>
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-bottom: 1rem; margin-top: 0;">
+                        ダメージ計算式</h2>
+                </summary>
+                <div style="line-height: 1.8; color: var(--color-text-main);">
+                    <p><strong>【近接武器の計算式】</strong></p>
+                    <p>物理ダメージ ＝ 最終攻撃力 × (モーション値 / 100) × (物理肉質 / 100) × 切れ味補正(物理) × 物理乗算補正<br>
+                        属性ダメージ ＝ {(本来の属性値 × 乗算補正 + 加算補正) × 斬れ味補正 × 属性補正 × 属性肉質} / 1000</p><br>
+                    <p><strong>【遠距離武器（弾）の計算式】</strong></p>
+                    <p>物理ダメージ ＝ (武器倍率 × モーション値 × 物理肉質 × 物理乗算補正) / 10000<br>
+                        属性ダメージ ＝ {(属性値 × 乗算補正 × 速射補正 ＋ 加算補正) × 属性肉質} / 1000<br>
+                        <span
+                            style="font-size:0.8rem; color:var(--color-text-muted);">※遠距離武器には切れ味補正はかかりません。現状、速射・乗算等の補正は1として計算されます。</span>
+                    </p>
+                </div>
+            </details>
+
+            <details id="section-excitation" class="db-section">
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-top: 0;">
+                        各武器種の激化タイプ上昇値</h2>
+                </summary>
+                <div id="db-excitation" style="overflow-x: auto; margin-top: 1rem;"></div>
+            </details>
+
+            <details id="section-monsters" class="db-section" open>
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-top: 0;">
+                        ターゲット（肉質データ）</h2>
+                </summary>
+                <div id="db-monsters" style="overflow-x: auto; margin-top: 1rem;"></div>
+            </details>
+
+            <details id="section-skills" class="db-section" open>
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-top: 0;">
+                        スキル詳細（各レベルの上昇値）</h2>
+                </summary>
+                <div id="db-skills" style="overflow-x: auto; margin-top: 1rem;"></div>
+            </details>
+
+            <details id="section-motions" class="db-section" open>
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-top: 0;">
+                        武器モーション値・属性補正</h2>
+                </summary>
+                <div id="db-motions" style="overflow-x: auto; margin-top: 1rem;"></div>
+            </details>
+
+        </main>
+    </div>
+    <footer style="text-align: center; padding: 2rem; color: var(--color-text-muted); font-size: 0.7rem;">
+        <p>&copy; 2026 Artia Tracker Project. Images & Data &copy;CAPCOM CO., LTD. ALL RIGHTS RESERVED.</p>
+    </footer>
+
+    <script type="module" src="js/db_main.js"></script>
+</body>
+
+</html>

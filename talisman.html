@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お守りリスト | Monster Hunter Wilds</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --color-bg: #0f1115;
+            --color-surface: #1a1d23;
+            --color-primary: #d4af37;
+            --color-secondary: #c0c0c0;
+            --color-text: #e0e6ed;
+            --color-text-muted: #94a3b8;
+            --color-border: rgba(255, 255, 255, 0.1);
+            --rare-5: #a9dfbf;
+            --rare-6: #5dade2;
+            --rare-7: #af7ac5;
+            --rare-8: #f4d03f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 2rem;
+            background-image: radial-gradient(circle at 50% 0%, #1e293b 0%, #0f1115 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+        }
+
+
+        .back-link {
+            display: inline-block;
+            color: var(--color-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            transition: opacity 0.2s;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .glass-card {
+            background: rgba(26, 29, 35, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .rare-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: #000;
+            margin-bottom: 0.5rem;
+        }
+
+        .rare-badge.ra5 {
+            background: var(--rare-5);
+        }
+
+        .rare-badge.ra6 {
+            background: var(--rare-6);
+        }
+
+        .rare-badge.ra7 {
+            background: var(--rare-7);
+        }
+
+        .rare-badge.ra8 {
+            background: var(--rare-8);
+        }
+
+        .pattern-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .pattern-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--color-primary);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .pattern-card::after {
+            content: 'クリックして詳細';
+            position: absolute;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.6rem;
+            color: var(--color-primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .pattern-card:hover::after {
+            opacity: 1;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--color-surface);
+            width: 90%;
+            max-width: 900px;
+            max-height: 80vh;
+            border-radius: 12px;
+            border: 1px solid var(--color-primary);
+            padding: 2rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 1rem;
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .combination-list-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 100px;
+            gap: 1rem;
+            padding: 0.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .combination-list-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .combination-list-item span:last-child {
+            color: var(--color-primary);
+            font-weight: bold;
+        }
+
+        .skill-group-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .slots {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .group-table-container {
+            margin-top: 3rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        th,
+        td {
+            border: 1px solid var(--color-border);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--color-primary);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .tab.active {
+            background: var(--color-primary);
+            color: #000;
+            font-weight: bold;
+        }
+
+        h2.section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--color-primary);
+            padding-left: 1rem;
+        }
+
+        /* Premium Section Styling */
+        details.premium-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+            margin-bottom: 2rem;
+        }
+
+        details.premium-section summary {
+            padding: 1.2rem 2rem;
+            cursor: pointer;
+            color: var(--color-primary);
+            font-weight: bold;
+            font-family: 'Marcellus', 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        details.premium-section summary:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        details.premium-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.premium-section summary::after {
+            content: '▼';
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+
+        details.premium-section[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .section-body {
+            padding: 2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="combination-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">組み合わせ詳細</h2>
+                <button class="close-btn" id="close-modal">&times;</button>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-bottom:1rem;">
+                ※組み合わせ数が多いため、最初の500件のみ表示しています。
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Combo list populated here -->
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <a href="index.html" class="back-link">← ダメージ計算機へ戻る</a>
+        <header>
+            <h1>お守りリスト</h1>
+            <p style="color: var(--color-text-muted);">ワイルズにおける護石の抽選アルゴリズムと組み合わせ</p>
+        </header>
+
+        <details class="premium-section" open>
+            <summary>レア度別パターン</summary>
+            <div class="section-body">
+                <div class="tabs" id="rare-tabs">
+                    <div class="tab active" data-rare="all">すべて</div>
+                    <div class="tab" data-rare="5">RARE 5</div>
+                    <div class="tab" data-rare="6">RARE 6</div>
+                    <div class="tab" data-rare="7">RARE 7</div>
+                    <div class="tab" data-rare="8">RARE 8</div>
+                </div>
+                <div class="grid" id="pattern-grid">
+                    <!-- JS populated -->
+                </div>
+            </div>
+        </details>
+
+        <details class="premium-section">
+            <summary>スキルグループ表</summary>
+            <div class="section-body">
+                <div class="tabs" id="group-tabs">
+                    <!-- Group 1-10 tabs -->
+                </div>
+                <div class="group-table-container" style="margin-top: 1rem;">
+                    <table id="group-table">
+                        <thead>
+                            <tr>
+                                <th>スキル名</th>
+                                <th>レベル</th>
+                            </tr>
+                        </thead>
+                        <tbody id="group-body">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+    </div>
+
+    <script type="module">
+        import { TALISMAN_GROUPS, TALISMAN_SLOTS, TALISMAN_COMBINATIONS } from './js/data/talisman.js';
+
+        const patternGrid = document.getElementById('pattern-grid');
+        const rareTabs = document.getElementById('rare-tabs');
+        const groupTabs = document.getElementById('group-tabs');
+        const groupBody = document.getElementById('group-body');
+
+        const groupColors = {
+            1: '#27ae60', 2: '#e67e22', 3: '#8e44ad', 4: '#f1c40f', 5: '#3498db',
+            6: '#2ecc71', 7: '#c0392b', 8: '#5dade2', 9: '#af7ac5', 10: '#2980b9'
+        };
+
+        const combinationModal = document.getElementById('combination-modal');
+        const closeModal = document.getElementById('close-modal');
+        const modalBody = document.getElementById('modal-body');
+        const modalTitle = document.getElementById('modal-title');
+
+        closeModal.onclick = () => combinationModal.style.display = 'none';
+        window.onclick = (e) => { if (e.target === combinationModal) combinationModal.style.display = 'none'; }
+
+        function showDetails(c) {
+            modalTitle.textContent = `抽選パターン: ${c.s1}-${c.s2}-${c.s3 || 'X'} (RARE${c.rare})`;
+            modalBody.innerHTML = '';
+
+            const g1 = TALISMAN_GROUPS[c.s1] || [];
+            const g2 = TALISMAN_GROUPS[c.s2] || [];
+            const g3 = c.s3 ? (TALISMAN_GROUPS[c.s3] || []) : [{ name: '-', level: '' }];
+            const slotsArr = TALISMAN_SLOTS[`RARE${c.rare}`] || [];
+
+            let count = 0;
+            const maxDisplay = 500;
+
+            for (const s1 of g1) {
+                for (const s2 of g2) {
+                    if (s2.name !== '-' && s2.name === s1.name) continue;
+                    for (const s3 of g3) {
+                        if (s3.name !== '-' && (s3.name === s1.name || s3.name === s2.name)) continue;
+                        for (const slot of slotsArr) {
+                            if (count >= maxDisplay) break;
+
+                            const div = document.createElement('div');
+                            div.className = 'combination-list-item';
+                            div.innerHTML = `
+                                <span>${s1.name} Lv${s1.level}</span>
+                                <span>${s2.name} Lv${s2.level}</span>
+                                <span>${s3.name}${s3.level ? ' Lv' + s3.level : ''}</span>
+                                <span>${slot}</span>
+                            `;
+                            modalBody.appendChild(div);
+                            count++;
+                        }
+                        if (count >= maxDisplay) break;
+                    }
+                    if (count >= maxDisplay) break;
+                }
+                if (count >= maxDisplay) break;
+            }
+            combinationModal.style.display = 'flex';
+        }
+
+        function renderPatterns(filterRare = 'all') {
+            patternGrid.innerHTML = '';
+            const list = filterRare === 'all'
+                ? TALISMAN_COMBINATIONS
+                : TALISMAN_COMBINATIONS.filter(c => c.rare == filterRare);
+
+            list.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'pattern-card';
+                card.onclick = () => showDetails(c);
+
+                let skillsHtml = `
+                    <div class="skill-group-indicator"><span class="dot" style="background:${groupColors[c.s1]}"></span> スキル1: グループ${c.s1}</div>
+                    <div class="skill-group-indicator"><span class="dot" style="background:${groupColors[c.s2]}"></span> スキル2: グループ${c.s2}</div>
+                `;
+                if (c.s3) {
+                    skillsHtml += `<div class="skill-group-indicator"><span class="dot" style="background:${groupColors[c.s3]}"></span> スキル3: グループ${c.s3}</div>`;
+                }
+
+                const slots = TALISMAN_SLOTS[`RARE${c.rare}`].join(' / ');
+
+                card.innerHTML = `
+                    <span class="rare-badge ra${c.rare}">RARE ${c.rare}</span>
+                    <div style="font-weight:bold; margin-bottom:0.5rem;">パターン: ${c.s1}-${c.s2}-${c.s3 || 'X'}</div>
+                    ${skillsHtml}
+                    <div class="slots">スロット候補:<br>${slots}</div>
+                `;
+                patternGrid.appendChild(card);
+            });
+        }
+
+        function renderGroup(groupId) {
+            groupBody.innerHTML = '';
+            const skills = TALISMAN_GROUPS[groupId] || [];
+            skills.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${s.name}</td><td>Lv${s.level}</td>`;
+                groupBody.appendChild(tr);
+            });
+        }
+
+        // Init tabs
+        rareTabs.addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab')) {
+                rareTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                renderPatterns(e.target.dataset.rare);
+            }
+        });
+
+        for (let i = 1; i <= 10; i++) {
+            const tab = document.createElement('div');
+            tab.className = 'tab' + (i === 1 ? ' active' : '');
+            tab.textContent = `Group ${i}`;
+            tab.dataset.group = i;
+            tab.addEventListener('click', (e) => {
+                groupTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderGroup(i);
+            });
+            groupTabs.appendChild(tab);
+        }
+
+        renderPatterns();
+        renderGroup(1);
+    </script>
+</body>
+
+</html>
