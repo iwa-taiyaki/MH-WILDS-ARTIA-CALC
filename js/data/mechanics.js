@@ -161,6 +161,22 @@ export const BUFF_GROUPS = [
     ]
   },
   {
+    id: 'group_meal',
+    name: '食事（加算）',
+    buffs: [
+      { id: 'camp_meal', name: 'キャンプ飯+2', attack: 2 },
+      { id: 'hall_meal', name: '集会所飯+5', attack: 5 }
+    ]
+  },
+  {
+    id: 'group_charm',
+    name: 'アイテム（加算）',
+    multi: true,
+    buffs: [
+      { id: 'power_charm', name: '力の護符+6', attack: 6 }
+    ]
+  },
+  {
     id: 'group_other',
     name: '旋律その他',
     multi: true,
@@ -170,3 +186,42 @@ export const BUFF_GROUPS = [
     ]
   }
 ];
+
+export const BOWGUN_CORRECTIONS = {
+  // ライトボウガン専用補正 (LBG inherent)
+  lbg_base: {
+    normal: 0.8,
+    pierce: 0.8,
+    spread: 0.7,
+    element: 0.7,
+    dragon: 0.8,
+    sticky: 0.5,
+    slash: 0.7
+  },
+  // 速射補正 (Rapid Fire)
+  rapid_fire: {
+    normal: 0.7,
+    pierce: 0.65,
+    spread: 0.55,
+    element: 0.6,
+    dragon: 0.7,
+    sticky: 0.35
+  },
+  // チェイスショット補正 (Chase Shot)
+  chase_shot: {
+    normal: 1.9,
+    pierce: 1.2,
+    spread: 0.85,
+    element: 0.75,
+    dragon: { phys: 1.1, elem: 1.2 }
+  },
+  // 速射チェイスショット補正 (Rapid Fire Chase Shot)
+  rapid_chase: {
+    normal: 5.0,
+    pierce: 3.0,
+    spread: 1.7,
+    element: { phys: 2.7, elem: 1.62 },
+    dragon: { phys: 1.5, elem: 0.98 },
+    sticky: 2.5
+  }
+};

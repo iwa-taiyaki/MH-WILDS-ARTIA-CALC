@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const bonusWarning = document.getElementById('bonus-warning');
     const sharpnessSelect = document.getElementById('target-sharpness-select');
     const sharpnessContainer = document.getElementById('target-sharpness-container');
+    const bowgunSettingsContainer = document.getElementById('bowgun-settings-container');
+    const bowgunRapidFire = document.getElementById('bowgun-rapid-fire');
+    const bowgunChaseShot = document.getElementById('bowgun-chase-shot');
     const motionSelect = document.getElementById('motion-select');
     const skillsSelectionList = document.getElementById('skills-selection-list');
     const activeSkillsList = document.getElementById('active-skills-list');
@@ -93,12 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Bonuses for all 5 slots
         bonusSelects.forEach(select => {
-            RESTORATION_BONUSES.forEach(bonus => {
-                const opt = document.createElement('option');
-                opt.value = bonus.id;
-                opt.textContent = bonus.name;
-                select.appendChild(opt);
-            });
             select.addEventListener('change', (e) => {
                 // Systematic restriction: Max 2 same bonuses
                 const selectedIds = Array.from(bonusSelects).map(s => s.value).filter(id => id !== 'none');
@@ -113,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateCalculation();
             });
         });
+        updateBonusOptions();
 
         // Monsters
         Object.keys(MONSTERS).forEach(mName => {
@@ -183,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
             mainHeader.style.fontWeight = 'bold';
             skillsSelectionList.appendChild(mainHeader);
 
-            // Optional subcategory grouping (attack, affinity, element, or null) within each main category
-            const subCategories = ['attack', 'affinity', 'element', null];
+            // Optional subcategory grouping (attack, affinity, element, ammo, or null) within each main category
+            const subCategories = ['attack', 'affinity', 'element', 'ammo', null];
             subCategories.forEach(subCat => {
                 const subSkills = catSkills.filter(s => s.subCategory === subCat);
                 if (subSkills.length === 0) return;
@@ -192,7 +190,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (subCat !== null) {
                     const subHeader = document.createElement('div');
                     subHeader.className = 'skill-subcategory-title';
-                    subHeader.textContent = subCat === 'attack' ? '攻撃力強化' : subCat === 'affinity' ? '会心率' : '属性・状態異常';
+                    const catNames = {
+                        attack: '攻撃力強化',
+                        affinity: '会心率',
+                        element: '属性・状態異常',
+                        ammo: '弾・矢強化'
+                    };
+                    subHeader.textContent = catNames[subCat] || '';
                     subHeader.style.gridColumn = '1 / -1';
                     subHeader.style.marginLeft = '0';
                     subHeader.style.marginTop = '1.2rem';
@@ -229,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         weaponTypeSelect.addEventListener('change', () => {
             updateMotionOptions();
             updateGunnerUI();
+            updateBonusOptions();
             updateCalculation();
         });
         excitationSelect.addEventListener('change', updateCalculation);
@@ -238,6 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         motionValueInput.addEventListener('input', updateCalculation);
         if (elementModInput) elementModInput.addEventListener('input', updateCalculation);
         sharpnessSelect.addEventListener('change', updateCalculation);
+        if (bowgunRapidFire) bowgunRapidFire.addEventListener('change', updateCalculation);
+        if (bowgunChaseShot) bowgunChaseShot.addEventListener('change', updateCalculation);
 
         // Set simulation defaults as requested
         monsterSelect.value = 'ゴグマジオス';
@@ -345,8 +352,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const weaponType = weaponTypeSelect.value;
         const gunnerWeapons = ['lbg', 'hbg', 'bow'];
         const isGunner = gunnerWeapons.includes(weaponType);
+        const isBowgun = ['lbg', 'hbg'].includes(weaponType);
+
         if (sharpnessContainer) {
             sharpnessContainer.style.display = isGunner ? 'none' : 'block';
+        }
+        if (bowgunSettingsContainer) {
+            bowgunSettingsContainer.style.display = isBowgun ? 'block' : 'none';
         }
 
         // 参照ステータス枠の背景画像を更新
@@ -358,6 +370,30 @@ document.addEventListener('DOMContentLoaded', () => {
             statusBox.style.backgroundRepeat = 'no-repeat';
             statusBox.style.backgroundPosition = 'center';
         }
+    }
+
+    function updateBonusOptions() {
+        const weaponType = weaponTypeSelect.value;
+        const isBowgun = ['lbg', 'hbg'].includes(weaponType);
+
+        bonusSelects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '';
+
+            RESTORATION_BONUSES.forEach(bonus => {
+                // ボウガンの場合は属性強化（group: 'elem'）を除外
+                if (isBowgun && bonus.group === 'elem') return;
+
+                const opt = document.createElement('option');
+                opt.value = bonus.id;
+                opt.textContent = bonus.name;
+                select.appendChild(opt);
+            });
+
+            // 選択されていた値が新しいリストにあるか確認（なければ 'none' へ）
+            const exists = Array.from(select.options).some(opt => opt.value === currentValue);
+            select.value = exists ? currentValue : 'none';
+        });
     }
 
     function getElementBaseValue() {
@@ -373,24 +409,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateHitzoneDisplay(hitzone) {
         if (!hitzone) return;
+        const currentWeaponId = weaponTypeSelect.value;
+        const weaponInfo = WEAPON_TYPES.find(t => t.id === currentWeaponId);
+        const weaponCat = weaponInfo ? weaponInfo.type : 'sever'; // sever, blunt, ammo
         const currentElem = elementTypeSelect.value;
-        const hl = (type) => currentElem === type
-            ? 'color: #ffcc00; font-weight: bold; background: rgba(255, 215, 0, 0.2); border-radius: 4px; padding: 2px 4px; text-shadow: 0 0 5px rgba(255,204,0,0.5);'
-            : 'color: var(--color-secondary); padding: 2px 4px;';
+
+        const hl = (type, current) => type === current
+            ? 'color: #ffcc00; font-weight: bold; background: rgba(255, 215, 0, 0.2); border-radius: 4px; padding: 2px 4px; text-shadow: 0 0 5px rgba(255,204,0,0.5); border: 1px solid rgba(255, 215, 0, 0.3);'
+            : 'color: var(--color-secondary); padding: 2px 4px; border: 1px solid transparent;';
 
         hitzoneDetailPanel.innerHTML = `
             <div style="grid-column: span 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; margin-bottom: 5px;">
-                <div style="color: var(--color-primary); display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_slash.png" alt="切断" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.sever}</div>
-                <div style="color: var(--color-primary); display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_strike.png" alt="打撃" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.blunt}</div>
-                <div style="color: var(--color-primary); display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_shell.png" alt="弾" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ammo}</div>
+                <div style="${hl('sever', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_slash.png" alt="切断" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.sever}</div>
+                <div style="${hl('blunt', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_strike.png" alt="打撃" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.blunt}</div>
+                <div style="${hl('ammo', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_shell.png" alt="弾" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ammo}</div>
                 <div></div>
             </div>
             <div style="grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.2rem; text-align: center;">
-                <div style="${hl('fire')} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_fire.png" alt="火" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.fire}</div>
-                <div style="${hl('water')} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_water.png" alt="水" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.water}</div>
-                <div style="${hl('thunder')} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_thunder.png" alt="雷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.thunder}</div>
-                <div style="${hl('ice')} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_ice.png" alt="氷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ice}</div>
-                <div style="${hl('dragon')} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_dragon.png" alt="龍" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.dragon}</div>
+                <div style="${hl('fire', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_fire.png" alt="火" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.fire}</div>
+                <div style="${hl('water', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_water.png" alt="水" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.water}</div>
+                <div style="${hl('thunder', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_thunder.png" alt="雷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.thunder}</div>
+                <div style="${hl('ice', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_ice.png" alt="氷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ice}</div>
+                <div style="${hl('dragon', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_dragon.png" alt="龍" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.dragon}</div>
             </div>
         `;
     }
@@ -541,8 +581,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 8. Motion Value
         calc.setMotionValue(motionValueInput.value || "100");
 
-        // 9. Sharpness
+        // 9. Sharpness/Gunner Settings
         calc.sharpness = sharpnessSelect.value;
+        calc.setBowgunSettings({
+            rapidFire: bowgunRapidFire ? bowgunRapidFire.checked : false,
+            chaseShot: bowgunChaseShot ? bowgunChaseShot.checked : false
+        });
 
         let currentElemMod = 1.0;
 
@@ -725,7 +769,11 @@ document.addEventListener('DOMContentLoaded', () => {
             motionAction: motionSelect ? motionSelect.value : 'custom',
             elementModValue: elementModInput ? elementModInput.value : "1.0",
             parts: Array.from(partSelects).map(s => s.value),
-            bonuses: Array.from(bonusSelects).map(s => s.value)
+            bonuses: Array.from(bonusSelects).map(s => s.value),
+            bowgunSettings: {
+                rapidFire: bowgunRapidFire ? bowgunRapidFire.checked : false,
+                chaseShot: bowgunChaseShot ? bowgunChaseShot.checked : false
+            }
         };
     }
 
@@ -762,6 +810,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (state.parts) partSelects.forEach((s, i) => { if (state.parts[i]) s.value = state.parts[i]; });
         if (state.bonuses) bonusSelects.forEach((s, i) => { if (state.bonuses[i]) s.value = state.bonuses[i]; });
+
+        // ボウガン設定の復元
+        if (state.bowgunSettings) {
+            if (bowgunRapidFire) bowgunRapidFire.checked = !!state.bowgunSettings.rapidFire;
+            if (bowgunChaseShot) bowgunChaseShot.checked = !!state.bowgunSettings.chaseShot;
+        } else {
+            if (bowgunRapidFire) bowgunRapidFire.checked = false;
+            if (bowgunChaseShot) bowgunChaseShot.checked = false;
+        }
+
+        updateGunnerUI();
 
         // バフ状態の復元
         if (state.buffStates) {

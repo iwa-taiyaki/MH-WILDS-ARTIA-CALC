@@ -1,4 +1,4 @@
-import { SHARPNESS } from './data.js';
+import { SHARPNESS, BOWGUN_CORRECTIONS } from './data.js';
 
 /**
  * Enhanced Calculator Logic supporting Restoration Bonuses and Monster Hitzones
@@ -27,6 +27,12 @@ export class MHWCalculator {
         // Monster specifics
         this.hitzone = { sever: 0, blunt: 0, ammo: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 };
         this.currentMotionName = '';
+
+        // Bowgun specifics
+        this.bowgunSettings = {
+            rapidFire: false,
+            chaseShot: false
+        };
     }
 
     reset() {
@@ -41,6 +47,7 @@ export class MHWCalculator {
         this.elementType = 'none';
         this.elementValue = 0;
         this.hitzone = { sever: 0, blunt: 0, ammo: 0, fire: 0, water: 0, thunder: 0, ice: 0, dragon: 0 };
+        this.bowgunSettings = { rapidFire: false, chaseShot: false };
     }
 
     setWeapon(weapon, typeData) {
@@ -110,6 +117,10 @@ export class MHWCalculator {
 
     setBuffs(buffs) {
         this.buffs = buffs;
+    }
+
+    setBowgunSettings(settings) {
+        this.bowgunSettings = settings || { rapidFire: false, chaseShot: false };
     }
 
     calculateStats(allSkillsData) {
@@ -188,6 +199,22 @@ export class MHWCalculator {
                         if (isJumpAttack) {
                             physicalMultiplier *= (1 + effect.attackMult);
                         }
+                    } else if (skillId === 'normal_up' || skillId === 'pierce_up' || skillId === 'spread_up' || skillId === 'rapid_fire_up_lbg') {
+                        // ボウガン弾強化スキルの判定 (CalculateStats内で ammoType を先に特定する必要があるが、現状はループの最初で検知を入れる)
+                        const name = this.currentMotionName;
+                        let targetAmmo = 'other';
+                        if (name.includes('通常弾')) targetAmmo = 'normal';
+                        else if (name.includes('貫通弾')) targetAmmo = 'pierce';
+                        else if (name.includes('散弾')) targetAmmo = 'spread';
+
+                        const isMatch = (skillId === 'normal_up' && targetAmmo === 'normal') ||
+                            (skillId === 'pierce_up' && targetAmmo === 'pierce') ||
+                            (skillId === 'spread_up' && targetAmmo === 'spread') ||
+                            (skillId === 'rapid_fire_up_lbg' && this.bowgunSettings.rapidFire);
+
+                        if (isMatch) {
+                            physicalMultiplier *= (1 + effect.attackMult);
+                        }
                     } else {
                         physicalMultiplier *= (1 + effect.attackMult);
                     }
@@ -233,9 +260,50 @@ export class MHWCalculator {
         const isAmmo = this.weaponCat === 'ammo';
         const sharpnessData = SHARPNESS[this.sharpness];
 
-        // Specific correction factors (Future extension)
-        const weaponMod = 1.0;      // 遠距離：武器補正 (弾種・距離補正等)
-        const rapidFireMod = 1.0;   // 遠距離：速射等の補正
+        // Specific correction factors (Updated with Bowgun Corrections)
+        let bowgunPhysMult = 1.0;
+        let bowgunElemMult = 1.0;
+
+        if (isAmmo) {
+            let ammoType = 'other';
+            const name = this.currentMotionName;
+            if (name.includes('通常弾')) ammoType = 'normal';
+            else if (name.includes('貫通弾')) ammoType = 'pierce';
+            else if (name.includes('散弾')) ammoType = 'spread';
+            else if (name.includes('属性弾')) ammoType = 'element';
+            else if (name.includes('滅龍弾')) ammoType = 'dragon';
+            else if (name.includes('徹甲榴弾')) ammoType = 'sticky';
+            else if (name.includes('斬裂弾')) ammoType = 'slash';
+
+            // LBG inherent multiplier
+            if (this.weaponType === 'lbg' && BOWGUN_CORRECTIONS.lbg_base[ammoType]) {
+                bowgunPhysMult *= BOWGUN_CORRECTIONS.lbg_base[ammoType];
+                if (ammoType === 'element' || ammoType === 'dragon' || ammoType === 'sticky' || ammoType === 'slash') {
+                    bowgunElemMult *= BOWGUN_CORRECTIONS.lbg_base[ammoType];
+                }
+            }
+
+            const rf = this.bowgunSettings.rapidFire;
+            const cs = this.bowgunSettings.chaseShot;
+
+            let corr = null;
+            if (rf && cs) corr = BOWGUN_CORRECTIONS.rapid_chase[ammoType];
+            else if (rf) corr = BOWGUN_CORRECTIONS.rapid_fire[ammoType];
+            else if (cs) corr = BOWGUN_CORRECTIONS.chase_shot[ammoType];
+
+            if (corr) {
+                if (typeof corr === 'number') {
+                    bowgunPhysMult *= corr;
+                    bowgunElemMult *= corr;
+                } else {
+                    if (corr.phys) bowgunPhysMult *= corr.phys;
+                    if (corr.elem) bowgunElemMult *= corr.elem;
+                }
+            }
+        }
+
+        const weaponMod = 1.0 * bowgunPhysMult;      // 遠距離：武器補正 (弾種・距離補正等)
+        const rapidFireMod = 1.0 * bowgunElemMult;   // 遠距離：速射等の補正
         const meleeElemMod = 1.0;   // 近接：属性補正
 
         // Precision definition: Round to one decimal place immediately for each component

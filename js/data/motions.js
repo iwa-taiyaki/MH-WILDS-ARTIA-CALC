@@ -545,7 +545,7 @@ export const MOTION_VALUES = {
     },
     {
       "name": "旋刈り",
-      "mv": 65,
+      "mv": 13,
       "elem": 1
     },
     {
@@ -874,7 +874,7 @@ export const MOTION_VALUES = {
     },
     {
       "name": "ジャンプ溜め攻撃Ⅰ",
-      "mv": 65,
+      "mv": 13,
       "elem": 1.1
     },
     {
@@ -931,7 +931,7 @@ export const MOTION_VALUES = {
     },
     {
       "name": "叩きつけ・追撃",
-      "mv": 65,
+      "mv": 13,
       "elem": 1
     },
     {
@@ -1629,7 +1629,7 @@ export const MOTION_VALUES = {
     },
     {
       "name": "高出力属性解放斬り",
-      "mv": 65,
+      "mv": 13,
       "elem": 1
     },
     {
@@ -2045,17 +2045,17 @@ export const MOTION_VALUES = {
   "lbg": [
     {
       "name": "Lv1通常弾",
-      "mv": 51,
+      "mv": 17,
       "elem": 1
     },
     {
       "name": "Lv2通常弾",
-      "mv": 71.4,
+      "mv": 23.8,
       "elem": 1
     },
     {
       "name": "Lv3通常弾",
-      "mv": 96.89999999999999,
+      "mv": 32.3,
       "elem": 1
     },
     {
@@ -2075,17 +2075,47 @@ export const MOTION_VALUES = {
     },
     {
       "name": "Lv1散弾",
-      "mv": 65,
+      "mv": 13,
       "elem": 1
     },
     {
       "name": "Lv2散弾",
-      "mv": 93.6,
+      "mv": 15.6,
       "elem": 1
     },
     {
       "name": "Lv3散弾",
-      "mv": 127.39999999999999,
+      "mv": 18.2,
+      "elem": 1
+    },
+    {
+      "name": "属性弾",
+      "mv": 10,
+      "elem": 30
+    },
+    {
+      "name": "貫通属性弾",
+      "mv": 5,
+      "elem": 17
+    },
+    {
+      "name": "Lv1徹甲榴弾",
+      "mv": 30,
+      "elem": 1
+    },
+    {
+      "name": "Lv2徹甲榴弾",
+      "mv": 38.4,
+      "elem": 1
+    },
+    {
+      "name": "Lv3徹甲榴弾",
+      "mv": 48,
+      "elem": 1
+    },
+    {
+      "name": "斬裂弾",
+      "mv": 11,
       "elem": 1
     },
     {
@@ -2152,17 +2182,17 @@ export const MOTION_VALUES = {
   "hbg": [
     {
       "name": "Lv1通常弾",
-      "mv": 51,
+      "mv": 17,
       "elem": 1
     },
     {
       "name": "Lv2通常弾",
-      "mv": 71.4,
+      "mv": 23.8,
       "elem": 1
     },
     {
       "name": "Lv3通常弾",
-      "mv": 96.89999999999999,
+      "mv": 32.3,
       "elem": 1
     },
     {
@@ -2182,17 +2212,47 @@ export const MOTION_VALUES = {
     },
     {
       "name": "Lv1散弾",
-      "mv": 65,
+      "mv": 13,
       "elem": 1
     },
     {
       "name": "Lv2散弾",
-      "mv": 93.6,
+      "mv": 15.6,
       "elem": 1
     },
     {
       "name": "Lv3散弾",
-      "mv": 127.39999999999999,
+      "mv": 18.2,
+      "elem": 1
+    },
+    {
+      "name": "属性弾",
+      "mv": 10,
+      "elem": 30
+    },
+    {
+      "name": "貫通属性弾",
+      "mv": 5,
+      "elem": 17
+    },
+    {
+      "name": "Lv1徹甲榴弾",
+      "mv": 30,
+      "elem": 1
+    },
+    {
+      "name": "Lv2徹甲榴弾",
+      "mv": 38.4,
+      "elem": 1
+    },
+    {
+      "name": "Lv3徹甲榴弾",
+      "mv": 48,
+      "elem": 1
+    },
+    {
+      "name": "斬裂弾",
+      "mv": 11,
       "elem": 1
     },
     {
@@ -2257,3 +2317,4 @@ export const MOTION_VALUES = {
     }
   ]
 };
+
