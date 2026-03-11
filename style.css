@@ -33,14 +33,19 @@
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* {
+/* 全ての要素に明朝体と等幅数字を強制適用 */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Marcellus', 'Shippori Mincho', 'Noto Serif JP', serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 body {
-  font-family: 'Marcellus', 'Noto Serif JP', serif;
   background-color: var(--color-bg-dark);
   color: var(--color-text-main);
   line-height: 1.6;
@@ -50,7 +55,6 @@ h1,
 h2,
 h3,
 .font-accent {
-  font-family: 'Marcellus', 'Noto Serif JP', serif;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }

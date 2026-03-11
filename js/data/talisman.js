@@ -118,7 +118,6 @@ export const TALISMAN_GROUPS = {
         { name: "見切り", level: 3 },
         { name: "貫通弾・竜の一矢強化", level: 1 },
         { name: "通常弾・通常矢強化", level: 1 },
-        { name: "連射強化", level: 1 },
         { name: "達人芸", level: 1 },
         { name: "鈍器使い", level: 3 },
         { name: "集中", level: 3 },

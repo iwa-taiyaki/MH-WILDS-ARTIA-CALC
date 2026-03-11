@@ -123,6 +123,15 @@ export class MHWCalculator {
         this.bowgunSettings = settings || { rapidFire: false, chaseShot: false };
     }
 
+    setWeaponSpecificParameters(params) {
+        this.weaponSpecifics = params || {
+            dbDemonMode: false,
+            lsSpiritGauge: 'none',
+            saPhialType: 'none',
+            igExtract: 'none'
+        };
+    }
+
     calculateStats(allSkillsData) {
         // --- 1. Base Multipliers and Additions ---
         let currentAttack = this.baseAttack + (this.excitation.attack || 0);
@@ -166,6 +175,11 @@ export class MHWCalculator {
             if (level <= 0) continue;
             if (skillId === 'weakness_exploit') continue;
 
+            // ボウガン専用スキルの判定 (First Shot, Force Shot)
+            if ((skillId === 'force_shot' || skillId === 'first_shot') && !['lbg', 'hbg'].includes(this.weaponType)) {
+                continue;
+            }
+
             const skillData = allSkillsData.find(s => s.id === skillId);
             if (!skillData) continue;
 
@@ -199,8 +213,7 @@ export class MHWCalculator {
                         if (isJumpAttack) {
                             physicalMultiplier *= (1 + effect.attackMult);
                         }
-                    } else if (skillId === 'normal_up' || skillId === 'pierce_up' || skillId === 'spread_up' || skillId === 'rapid_fire_up_lbg') {
-                        // ボウガン弾強化スキルの判定 (CalculateStats内で ammoType を先に特定する必要があるが、現状はループの最初で検知を入れる)
+                    } else if (skillId === 'normal_up' || skillId === 'pierce_up' || skillId === 'spread_up') {
                         const name = this.currentMotionName;
                         let targetAmmo = 'other';
                         if (name.includes('通常弾')) targetAmmo = 'normal';
@@ -209,10 +222,14 @@ export class MHWCalculator {
 
                         const isMatch = (skillId === 'normal_up' && targetAmmo === 'normal') ||
                             (skillId === 'pierce_up' && targetAmmo === 'pierce') ||
-                            (skillId === 'spread_up' && targetAmmo === 'spread') ||
-                            (skillId === 'rapid_fire_up_lbg' && this.bowgunSettings.rapidFire);
+                            (skillId === 'spread_up' && targetAmmo === 'spread');
 
                         if (isMatch) {
+                            physicalMultiplier *= (1 + effect.attackMult);
+                        }
+                    } else if (skillId === 'rapid_fire_up_lbg') {
+                        // 速射強化: 速射時のみ適用
+                        if (this.bowgunSettings.rapidFire) {
                             physicalMultiplier *= (1 + effect.attackMult);
                         }
                     } else {
@@ -232,18 +249,41 @@ export class MHWCalculator {
                 }
             }
         }
+        // 1. 乗算補正の集計 (スキル、旋律、武器固有)
+        let totalPhysicalMultiplier = physicalMultiplier * buffMultiplier;
+        let totalElementMultiplier = elementMultiplier;
 
-        // Final Multiplied Stats (武器倍率 / 属性値)
-        // 1. 基底攻撃力にスキルの乗算補正を適用
-        let attackStep = (currentAttack * physicalMultiplier);
+        if (this.weaponSpecifics) {
+            // 双剣: 鬼人化 1.2倍
+            if (this.weaponType === 'db' && this.weaponSpecifics.dbDemonMode) {
+                totalPhysicalMultiplier *= 1.2;
+            }
+            // 太刀: 気刃ゲージ
+            if (this.weaponType === 'ls') {
+                if (this.weaponSpecifics.lsSpiritGauge === 'white') totalPhysicalMultiplier *= 1.02;
+                else if (this.weaponSpecifics.lsSpiritGauge === 'yellow') totalPhysicalMultiplier *= 1.04;
+                else if (this.weaponSpecifics.lsSpiritGauge === 'red') totalPhysicalMultiplier *= 1.10;
+            }
+            // スラッシュアックス: ビン補正
+            if (this.weaponType === 'sa') {
+                if (this.weaponSpecifics.saPhialType === 'power') totalPhysicalMultiplier *= 1.17;
+                else if (this.weaponSpecifics.saPhialType === 'element') totalElementMultiplier *= 1.45;
+            }
+            // 操虫棍: エキス補正
+            if (this.weaponType === 'ig') {
+                if (this.weaponSpecifics.igExtract === 'red_white') totalPhysicalMultiplier *= 1.10;
+                else if (this.weaponSpecifics.igExtract === 'red_white_orange') totalPhysicalMultiplier *= 1.15;
+            }
+        }
 
-        // 2. スキルとアイテムの加算補正を合計
-        let totalFlatAttack = skillAttackAdd + buffAttackAdd;
+        // 2. 最終攻撃力/属性値の算出
+        // ダメージ計算用 (calc): 精度を保つため、表示用の切り捨てを行う前の生の値を使用
+        const calcAttack = (currentAttack * totalPhysicalMultiplier) + skillAttackAdd + buffAttackAdd;
+        const calcElement = (currentElement * totalElementMultiplier) + elementAddBonus;
 
-        // 3. 乗算補正（旋律など）を最終的に適用
-        const weaponMultiplier = (attackStep + totalFlatAttack) * buffMultiplier;
-
-        const finalElement = (currentElement * elementMultiplier) + elementAddBonus;
+        // UI表示用 (display): ゲームのステータス画面に合わせるための切り捨て
+        const displayAttackValue = Math.floor(currentAttack * totalPhysicalMultiplier) + skillAttackAdd + buffAttackAdd;
+        const displayElementValue = Math.floor(currentElement * totalElementMultiplier) + elementAddBonus;
 
         // Weakness Exploit
         const targetHz = this.hitzone[this.weaponCat] || 0;
@@ -319,9 +359,9 @@ export class MHWCalculator {
 
         const calcPhys = (critMod, mv) => {
             if (isAmmo) {
-                return (weaponMultiplier * mv * critMod * weaponMod * targetHz) / 10000;
+                return (calcAttack * mv * critMod * weaponMod * targetHz) / 10000;
             } else {
-                return (weaponMultiplier * mv * sharpnessData.raw * critMod * targetHz) / 10000;
+                return (calcAttack * mv * sharpnessData.raw * critMod * targetHz) / 10000;
             }
         };
 
@@ -329,9 +369,9 @@ export class MHWCalculator {
         const calcElem = (eCritMod, hitElemMod) => {
             // Use hitElemMod as the primary multiplier for the action
             if (isAmmo) {
-                return (finalElement * hitElemMod * rapidFireMod * elementHz * eCritMod) / 1000;
+                return (calcElement * hitElemMod * rapidFireMod * elementHz * eCritMod) / 1000;
             } else {
-                return (finalElement * hitElemMod * sharpnessData.element * meleeElemMod * elementHz * eCritMod) / 1000;
+                return (calcElement * hitElemMod * sharpnessData.element * meleeElemMod * elementHz * eCritMod) / 1000;
             }
         };
 
@@ -360,15 +400,31 @@ export class MHWCalculator {
         const expectedDamage = (totalNormal * (1 - critRate - feebleRate)) + (totalCrit * critRate) + (physCrit + elemNormal) * feebleRate;
         // NOTE: For negative affinity, physical becomes 0.75 (physCrit), element stays same.
 
+        const hitDetails = mvs.map((mv, i) => {
+            const pNorm = round1(calcPhys(1.0, mv));
+            const pCrit = round1(calcPhys(calcAffinity < 0 ? 0.75 : critDamageMult, mv));
+            const eNorm = (this.elementType !== 'none' && mv > 0) ? round1(calcElem(1.0, elems[i])) : 0;
+            const eCrit = (this.elementType !== 'none' && mv > 0) ? round1(calcElem(calcAffinity < 0 ? 1.0 : elementCritMultiplier, elems[i])) : 0;
+
+            return {
+                physicalNormal: pNorm.toFixed(1),
+                physicalCrit: pCrit.toFixed(1),
+                elementalNormal: eNorm.toFixed(1),
+                elementalCrit: eCrit.toFixed(1),
+                totalNormal: (pNorm + eNorm).toFixed(1),
+                totalCrit: (pCrit + eCrit).toFixed(1)
+            };
+        });
+
         return {
-            baseAttack: currentAttack,
+            baseAttack: currentAttack, // 武器基礎ステータス用: 武器本来+激化+復元 (整数)
             baseElement: currentElement,
             baseAffinity: currentAffinity,
-            displayAttack: Math.floor(weaponMultiplier),
-            displayElement: Math.floor(finalElement),
+            displayAttack: displayAttackValue, // 参照ステータス用: スキル・バフ適用後 (切り捨て済)
+            displayElement: displayElementValue,
             affinity: displayAffinity,
 
-            // Per Hit Damage (Displays)
+            // Per Hit Damage (Displays) - 精度の高い calcAttack / calcElement を内部で使用した結果
             physicalDamageNormal: physNormal.toFixed(1),
             elementalDamageNormal: elemNormal.toFixed(1),
             totalDamageNormal: totalNormal.toFixed(1),
@@ -380,7 +436,8 @@ export class MHWCalculator {
             expectedDamage: expectedDamage.toFixed(1),
 
             hitzoneValue: targetHz,
-            elementHitzone: this.elementType !== 'none' ? this.hitzone[this.elementType] : 0
+            elementHitzone: this.elementType !== 'none' ? this.hitzone[this.elementType] : 0,
+            hits: hitDetails
         };
     }
 }

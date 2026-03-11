@@ -20,6 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const bowgunSettingsContainer = document.getElementById('bowgun-settings-container');
     const bowgunRapidFire = document.getElementById('bowgun-rapid-fire');
     const bowgunChaseShot = document.getElementById('bowgun-chase-shot');
+
+    const dbSettingsContainer = document.getElementById('db-settings-container');
+    const dbDemonMode = document.getElementById('db-demon-mode');
+
+    const lsSettingsContainer = document.getElementById('ls-settings-container');
+    const lsSpiritGauge = document.getElementById('ls-spirit-gauge');
+
+    const saSettingsContainer = document.getElementById('sa-settings-container');
+    const saPhialType = document.getElementById('sa-phial-type');
+
+    const igSettingsContainer = document.getElementById('ig-settings-container');
+    const igExtract = document.getElementById('ig-extract');
+
     const motionSelect = document.getElementById('motion-select');
     const skillsSelectionList = document.getElementById('skills-selection-list');
     const activeSkillsList = document.getElementById('active-skills-list');
@@ -57,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseAtkDisplay = document.getElementById('base-atk-display');
     const baseElemDisplay = document.getElementById('base-elem-display');
     const baseAffDisplay = document.getElementById('base-aff-display');
+    const displayHitDetails = document.getElementById('display-hit-details');
 
     function init() {
         // Weapon Types
@@ -232,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         weaponTypeSelect.addEventListener('change', () => {
             updateMotionOptions();
-            updateGunnerUI();
+            updateWeaponSpecificUI();
             updateBonusOptions();
             updateCalculation();
         });
@@ -245,6 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
         sharpnessSelect.addEventListener('change', updateCalculation);
         if (bowgunRapidFire) bowgunRapidFire.addEventListener('change', updateCalculation);
         if (bowgunChaseShot) bowgunChaseShot.addEventListener('change', updateCalculation);
+        if (dbDemonMode) dbDemonMode.addEventListener('change', updateCalculation);
+        if (lsSpiritGauge) lsSpiritGauge.addEventListener('change', updateCalculation);
+        if (saPhialType) saPhialType.addEventListener('change', updateCalculation);
+        if (igExtract) igExtract.addEventListener('change', updateCalculation);
 
         // Set simulation defaults as requested
         monsterSelect.value = 'ゴグマジオス';
@@ -274,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initial update
         updateMotionOptions();
-        updateGunnerUI();
+        updateWeaponSpecificUI();
         performCalculation(); // Execute immediately for initial load
     }
 
@@ -348,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    function updateGunnerUI() {
+    function updateWeaponSpecificUI() {
         const weaponType = weaponTypeSelect.value;
         const gunnerWeapons = ['lbg', 'hbg', 'bow'];
         const isGunner = gunnerWeapons.includes(weaponType);
@@ -357,9 +375,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sharpnessContainer) {
             sharpnessContainer.style.display = isGunner ? 'none' : 'block';
         }
-        if (bowgunSettingsContainer) {
-            bowgunSettingsContainer.style.display = isBowgun ? 'block' : 'none';
-        }
+
+        if (bowgunSettingsContainer) bowgunSettingsContainer.style.display = isBowgun ? 'block' : 'none';
+        if (dbSettingsContainer) dbSettingsContainer.style.display = (weaponType === 'db') ? 'block' : 'none';
+        if (lsSettingsContainer) lsSettingsContainer.style.display = (weaponType === 'ls') ? 'block' : 'none';
+        if (saSettingsContainer) saSettingsContainer.style.display = (weaponType === 'sa') ? 'block' : 'none';
+        if (igSettingsContainer) igSettingsContainer.style.display = (weaponType === 'ig') ? 'block' : 'none';
 
         // 参照ステータス枠の背景画像を更新
         const statusBox = document.getElementById('status-section-box');
@@ -588,6 +609,13 @@ document.addEventListener('DOMContentLoaded', () => {
             chaseShot: bowgunChaseShot ? bowgunChaseShot.checked : false
         });
 
+        calc.setWeaponSpecificParameters({
+            dbDemonMode: dbDemonMode ? dbDemonMode.checked : false,
+            lsSpiritGauge: lsSpiritGauge ? lsSpiritGauge.value : 'none',
+            saPhialType: saPhialType ? saPhialType.value : 'none',
+            igExtract: igExtract ? igExtract.value : 'none'
+        });
+
         let currentElemMod = 1.0;
 
         // Ensure we parse the string input for element mod too
@@ -630,6 +658,46 @@ document.addEventListener('DOMContentLoaded', () => {
         baseAtkDisplay.textContent = results.baseAttack;
         baseElemDisplay.textContent = results.baseElement;
         baseAffDisplay.textContent = results.baseAffinity + '%';
+
+        // Update Hit Details
+        if (displayHitDetails) {
+            displayHitDetails.innerHTML = '';
+            if (results.hits) {
+                results.hits.forEach((hit, idx) => {
+                    const hitRow = document.createElement('div');
+                    hitRow.style.background = 'rgba(255,255,255,0.02)';
+                    hitRow.style.padding = '0.4rem';
+                    hitRow.style.borderRadius = '4px';
+                    hitRow.style.fontSize = '0.7rem';
+                    hitRow.style.marginBottom = '0.4rem';
+
+                    hitRow.innerHTML = `
+                        <div style="color: var(--color-text-muted); margin-bottom: 0.3rem; margin-left: 0.2rem; font-size: 0.65rem;">${idx + 1}段目</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                            <!-- 通常 -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.3rem 0.4rem; border-radius: 3px;">
+                                <span style="color: var(--color-text-muted); font-size: 0.65rem;">通常</span>
+                                <div style="display: flex; gap: 0.4rem; font-size: 0.65rem;">
+                                    <span style="color: rgba(255,255,255,0.5);">物:<span style="color: white; font-weight:bold; margin-left:2px">${hit.physicalNormal}</span></span>
+                                    <span style="color: rgba(0,255,255,0.3);">属:<span style="color: white; font-weight:bold; margin-left:2px">${hit.elementalNormal}</span></span>
+                                    <span style="color: #ffcc00; font-weight:bold; min-width: 1.8rem; text-align:right;">${hit.totalNormal}</span>
+                                </div>
+                            </div>
+                            <!-- 会心 -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,215,0,0.05); padding: 0.3rem 0.4rem; border-radius: 3px; border: 1px solid rgba(255,215,0,0.1);">
+                                <span style="color: #ffcc00; font-size: 0.65rem;">会心</span>
+                                <div style="display: flex; gap: 0.4rem; font-size: 0.65rem;">
+                                    <span style="color: rgba(255,255,255,0.6);">物:<span style="color: white; font-weight:bold; margin-left:2px">${hit.physicalCrit}</span></span>
+                                    <span style="color: rgba(0,255,255,0.4);">属:<span style="color: white; font-weight:bold; margin-left:2px">${hit.elementalCrit}</span></span>
+                                    <span style="color: #ffcc00; font-weight:bold; min-width: 1.8rem; text-align:right;">${hit.totalCrit}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    displayHitDetails.appendChild(hitRow);
+                });
+            }
+        }
     }
 
     // --- Optimal Calculation System ---
@@ -658,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     optExpectedDamage.textContent = result.expectedDamageString;
 
                     const exciData = EXCITATION_TYPES.find(e => e.id === result.excitation);
-                    optExcitation.textContent = exciData ? exciData.name : result.excitation;
+                    optExcitation.innerHTML = `<div>・${exciData ? exciData.name : result.excitation}</div>`;
 
                     const partNames = result.parts.map(pid => {
                         const p = RESTORATION_PARTS.find(x => x.id === pid);
@@ -678,6 +746,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 optCalculating.style.display = 'none';
             }, 10);
+        });
+    }
+
+    if (btnApplyOptimal) {
+        btnApplyOptimal.addEventListener('click', () => {
+            if (!currentOptimalConfig) return;
+
+            // 激化タイプの設定
+            if (excitationSelect) {
+                excitationSelect.value = currentOptimalConfig.excitation;
+            }
+
+            // パーツの設定
+            if (currentOptimalConfig.parts && currentOptimalConfig.parts.length === 3) {
+                partSelects.forEach((select, m) => {
+                    select.value = currentOptimalConfig.parts[m];
+                });
+            }
+
+            // ボーナスの設定
+            if (currentOptimalConfig.bonuses && currentOptimalConfig.bonuses.length === 5) {
+                bonusSelects.forEach((select, n) => {
+                    select.value = currentOptimalConfig.bonuses[n];
+                });
+            }
+
+            // UI反映と再計算
+            updateCalculator();
+            alert('最適解を適用しました！');
         });
     }
 
@@ -710,12 +807,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         let targetElemMod = [1.0];
+        let targetPartMod = 1.0;
         let motionName = 'Custom';
         if (motionSelect && motionSelect.value !== 'custom') {
             const index = motionSelect.value;
             const motion = MOTION_VALUES[weaponTypeSelect.value] && MOTION_VALUES[weaponTypeSelect.value][index];
             if (motion) {
                 targetElemMod = motion.elem;
+                targetPartMod = motion.partMod || 1.0;
                 motionName = motion.name;
             }
         } else {
@@ -761,10 +860,17 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSkillLevels,
             motionValue: motionValueInput.value || "100",
             motionElementMod: targetElemMod,
+            motionPartMod: targetPartMod,
             motionName: motionName,
             sharpness: sharpnessSelect.value,
             locks,
             buffStates,
+            weaponSpecificParams: {
+                dbDemonMode: dbDemonMode ? dbDemonMode.checked : false,
+                lsSpiritGauge: lsSpiritGauge ? lsSpiritGauge.value : 'none',
+                saPhialType: saPhialType ? saPhialType.value : 'none',
+                igExtract: igExtract ? igExtract.value : 'none'
+            },
             // 永続化用の追加情報
             motionAction: motionSelect ? motionSelect.value : 'custom',
             elementModValue: elementModInput ? elementModInput.value : "1.0",
@@ -820,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (bowgunChaseShot) bowgunChaseShot.checked = false;
         }
 
-        updateGunnerUI();
+        updateWeaponSpecificUI();
 
         // バフ状態の復元
         if (state.buffStates) {
@@ -854,7 +960,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         updateCalculation();
-        updateGunnerUI();
+        updateWeaponSpecificUI();
     }
 
     if (btnApplyOptimal) {

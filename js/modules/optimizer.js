@@ -28,7 +28,7 @@ export function findOptimalArtiaConfiguration(state) {
     const weapon = WEAPONS.find(w => w.type === weaponTypeId);
     const hitzone = (monsterName && hitzonePartIndex !== "") ? MONSTERS[monsterName].parts[hitzonePartIndex] : null;
 
-    const validExcitations = ['attack', 'affinity', 'element'];
+    const validExcitations = ['none', 'attack', 'affinity', 'element'];
     const validParts = RESTORATION_PARTS.filter(p => p.id !== 'none');
     const validBonuses = RESTORATION_BONUSES.filter(b => b.id !== 'none');
 
@@ -112,7 +112,7 @@ export function findOptimalArtiaConfiguration(state) {
     for (const exci of requiredExcitations) {
         const exciData = (EXCITATION_DATA[weaponTypeId] && EXCITATION_DATA[weaponTypeId][exci])
             ? EXCITATION_DATA[weaponTypeId][exci]
-            : { attack: 0, affinity: 0 };
+            : { attack: 0, affinity: 0, element: 0 };
 
         for (const pCombo of filteredPartCombos) {
             for (const bCombo of filteredBonusCombos) {
@@ -130,12 +130,13 @@ export function findOptimalArtiaConfiguration(state) {
 
                 tempCalc.setMotionValue(motionValue);
                 tempCalc.sharpness = sharpness;
-                tempCalc.setMotion(motionValue, motionElementMod, 1.0, motionName);
+                tempCalc.setMotion(motionValue, motionElementMod, state.motionPartMod || 1.0, motionName);
+                tempCalc.setBowgunSettings(state.bowgunSettings);
+                tempCalc.setWeaponSpecificParameters(state.weaponSpecificParams);
                 tempCalc.setBuffs(selectedBuffs);
 
                 const res = tempCalc.calculateStats(SKILLS);
-                const expectedStr = String(res.expectedDamage).replace(/,/g, '');
-                const expectedVal = parseFloat(expectedStr);
+                const expectedVal = parseFloat(res.expectedDamage); // res.expectedDamage は string なのでパースする
 
                 if (expectedVal > maxExpectedDamage) {
                     maxExpectedDamage = expectedVal;

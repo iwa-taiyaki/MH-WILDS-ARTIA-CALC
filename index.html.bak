@@ -135,72 +135,6 @@
                                 </label>
                             </div>
                         </div>
-
-                        <!-- 双剣特有補正 -->
-                        <div class="input-group" id="db-settings-container"
-                            style="display: none; grid-column: span 2; margin-top: 0.2rem;">
-                            <label
-                                style="font-size: 0.7rem; color: #ffcc00; display: block; margin-bottom: 0.3rem;">双剣特有補正</label>
-                            <div
-                                style="display: flex; flex-direction: row; gap: 1rem; background: rgba(255,215,0,0.05); padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,215,0,0.1); justify-content: center;">
-                                <label
-                                    style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.75rem; color: #ffcc00;">
-                                    <input type="checkbox" id="db-demon-mode"> 鬼人化 (攻撃倍率1.2倍)
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- 太刀特有補正 -->
-                        <div class="input-group" id="ls-settings-container"
-                            style="display: none; grid-column: span 2; margin-top: 0.2rem;">
-                            <label
-                                style="font-size: 0.7rem; color: #ffcc00; display: block; margin-bottom: 0.3rem;">太刀特有補正</label>
-                            <div
-                                style="display: flex; flex-direction: row; gap: 1rem; background: rgba(255,215,0,0.05); padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,215,0,0.1); justify-content: center; align-items: center;">
-                                <label style="font-size: 0.75rem; color: #ffcc00;">気刃ゲージ:</label>
-                                <select id="ls-spirit-gauge"
-                                    style="padding: 0.2rem; font-size: 0.75rem; background: var(--color-bg-dark); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;">
-                                    <option value="none">なし (1.00倍)</option>
-                                    <option value="white">白 (1.02倍)</option>
-                                    <option value="yellow">黄 (1.04倍)</option>
-                                    <option value="red">赤 (1.10倍)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- スラッシュアックス特有補正 -->
-                        <div class="input-group" id="sa-settings-container"
-                            style="display: none; grid-column: span 2; margin-top: 0.2rem;">
-                            <label
-                                style="font-size: 0.7rem; color: #ffcc00; display: block; margin-bottom: 0.3rem;">スラッシュアックス特有補正</label>
-                            <div
-                                style="display: flex; flex-direction: row; gap: 1rem; background: rgba(255,215,0,0.05); padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,215,0,0.1); justify-content: center; align-items: center;">
-                                <label style="font-size: 0.75rem; color: #ffcc00;">装着ビン (剣部):</label>
-                                <select id="sa-phial-type"
-                                    style="padding: 0.2rem; font-size: 0.75rem; background: var(--color-bg-dark); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;">
-                                    <option value="none">なし・その他</option>
-                                    <option value="power">パワーフィアル (物理1.17倍)</option>
-                                    <option value="element">属性フィアル (属性1.45倍)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- 操虫棍特有補正 -->
-                        <div class="input-group" id="ig-settings-container"
-                            style="display: none; grid-column: span 2; margin-top: 0.2rem;">
-                            <label
-                                style="font-size: 0.7rem; color: #ffcc00; display: block; margin-bottom: 0.3rem;">操虫棍特有補正</label>
-                            <div
-                                style="display: flex; flex-direction: row; gap: 1rem; background: rgba(255,215,0,0.05); padding: 0.5rem; border-radius: 4px; border: 1px solid rgba(255,215,0,0.1); justify-content: center; align-items: center;">
-                                <label style="font-size: 0.75rem; color: #ffcc00;">エキス状態:</label>
-                                <select id="ig-extract"
-                                    style="padding: 0.2rem; font-size: 0.75rem; background: var(--color-bg-dark); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;">
-                                    <option value="none">なし (1.00倍)</option>
-                                    <option value="red_white">赤+白 (1.10倍)</option>
-                                    <option value="red_white_orange">赤+白+橙 (1.15倍)</option>
-                                </select>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -218,26 +152,12 @@
                         style="display: none; font-size: 0.7rem; color: #ffcc00; text-align: center; margin-top: 0.3rem;">
                         計算中...</div>
                     <div id="optimal-result-panel"
-                        style="display: none; margin-top: 0.8rem; font-size: 0.8rem; background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 8px; border: 1px solid rgba(50, 205, 50, 0.3);">
-                        <div style="text-align: center; margin-bottom: 0.8rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                            <div style="font-size: 0.7rem; color: #32cd32; margin-bottom: 0.2rem;">期待値</div>
-                            <div id="opt-expected-damage" style="color: #ffcc00; font-weight: bold; font-size: 1.8rem; text-shadow: 0 0 10px rgba(255,204,0,0.3);">0</div>
-                        </div>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem;">
-                            <div>
-                                <div style="color: var(--color-primary); font-size: 0.7rem; font-weight: bold; margin-bottom: 0.2rem;">激化タイプ</div>
-                                <div id="opt-excitation" style="font-size: 0.75rem; margin-left: 0.4rem;"></div>
-                            </div>
-                            <div>
-                                <div style="color: var(--color-primary); font-size: 0.7rem; font-weight: bold; margin-bottom: 0.2rem;">復元パーツ</div>
-                                <div id="opt-parts" style="font-size: 0.75rem; margin-left: 0.4rem; line-height: 1.3;"></div>
-                            </div>
-                            <div>
-                                <div style="color: var(--color-primary); font-size: 0.7rem; font-weight: bold; margin-bottom: 0.2rem;">復元ボーナス</div>
-                                <div id="opt-bonuses" style="font-size: 0.75rem; margin-left: 0.4rem; line-height: 1.3;"></div>
-                            </div>
-                        </div>
+                        style="display: none; margin-top: 0.5rem; font-size: 0.75rem; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px;">
+                        <div style="margin-bottom: 0.3rem;">期待値: <span id="opt-expected-damage"
+                                style="color: #ffcc00; font-weight: bold;">0</span></div>
+                        <div id="opt-excitation" style="font-size: 0.7rem; margin-bottom: 0.2rem;"></div>
+                        <div id="opt-parts" style="font-size: 0.7rem; color: #a9dfbf;"></div>
+                        <div id="opt-bonuses" style="font-size: 0.7rem; color: #a9dfbf;"></div>
                         <button id="btn-apply-optimal" class="btn-primary"
                             style="width: 100%; padding: 0.2rem; margin-top: 0.4rem; font-size: 0.7rem; background: transparent; border: 1px solid #32cd32; color: #32cd32;">適用</button>
                     </div>
@@ -480,11 +400,6 @@
                             <div style="margin-top: 0.4rem; font-size: 1rem; text-align: right; color: #ffcc00; font-weight: bold; border-top: 1px solid rgba(255,215,0,0.2);"
                                 id="display-total-damage-crit">0</div>
                         </div>
-                    </div>
-
-                    <!-- 多段ヒット詳細コンテナ -->
-                    <div id="display-hit-details"
-                        style="margin-top: 1rem; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem;">
                     </div>
                 </div>
             </aside>
