@@ -441,22 +441,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentElem = elementTypeSelect.value;
 
         const hl = (type, current) => type === current
-            ? 'color: #ffcc00; font-weight: bold; background: rgba(255, 215, 0, 0.2); border-radius: 4px; padding: 2px 4px; text-shadow: 0 0 5px rgba(255,204,0,0.5); border: 1px solid rgba(255, 215, 0, 0.3);'
-            : 'color: var(--color-secondary); padding: 2px 4px; border: 1px solid transparent;';
+            ? 'color: #ffcc00; font-weight: bold; background: rgba(255, 215, 0, 0.2); border-radius: 4px; padding: 2px 4px; text-shadow: 0 0 5px rgba(255,204,0,0.5); border: 1px solid rgba(255, 215, 0, 0.3); font-size: 1rem;'
+            : 'color: var(--color-secondary); padding: 2px 4px; border: 1px solid transparent; font-size: 0.85rem;';
 
         hitzoneDetailPanel.innerHTML = `
             <div style="grid-column: span 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px; margin-bottom: 5px;">
-                <div style="${hl('sever', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_slash.png" alt="切断" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.sever}</div>
-                <div style="${hl('blunt', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_strike.png" alt="打撃" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.blunt}</div>
-                <div style="${hl('ammo', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_shell.png" alt="弾" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ammo}</div>
+                <div style="${hl('sever', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_slash.png" alt="切断" style="width: 20px; height: 20px; object-fit: contain;"> ${hitzone.sever}</div>
+                <div style="${hl('blunt', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_strike.png" alt="打撃" style="width: 20px; height: 20px; object-fit: contain;"> ${hitzone.blunt}</div>
+                <div style="${hl('ammo', weaponCat)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/hit_shell.png" alt="弾" style="width: 20px; height: 20px; object-fit: contain;"> ${hitzone.ammo}</div>
                 <div></div>
             </div>
             <div style="grid-column: span 4; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.2rem; text-align: center;">
-                <div style="${hl('fire', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_fire.png" alt="火" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.fire}</div>
-                <div style="${hl('water', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_water.png" alt="水" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.water}</div>
-                <div style="${hl('thunder', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_thunder.png" alt="雷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.thunder}</div>
-                <div style="${hl('ice', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_ice.png" alt="氷" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.ice}</div>
-                <div style="${hl('dragon', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_dragon.png" alt="龍" style="width: 16px; height: 16px; object-fit: contain;"> ${hitzone.dragon}</div>
+                <div style="${hl('fire', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_fire.png" alt="火" style="width: 18px; height: 18px; object-fit: contain;"> ${hitzone.fire}</div>
+                <div style="${hl('water', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_water.png" alt="水" style="width: 18px; height: 18px; object-fit: contain;"> ${hitzone.water}</div>
+                <div style="${hl('thunder', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_thunder.png" alt="雷" style="width: 18px; height: 18px; object-fit: contain;"> ${hitzone.thunder}</div>
+                <div style="${hl('ice', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_ice.png" alt="氷" style="width: 18px; height: 18px; object-fit: contain;"> ${hitzone.ice}</div>
+                <div style="${hl('dragon', currentElem)} display: flex; align-items: center; justify-content: center; gap: 4px;"><img src="icon/element_dragon.png" alt="龍" style="width: 18px; height: 18px; object-fit: contain;"> ${hitzone.dragon}</div>
             </div>
         `;
     }
@@ -705,16 +705,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     hitRow.style.background = 'rgba(255,255,255,0.02)';
                     hitRow.style.padding = '0.4rem';
                     hitRow.style.borderRadius = '4px';
-                    hitRow.style.fontSize = '0.7rem';
+                    hitRow.style.fontSize = '0.9rem';
                     hitRow.style.marginBottom = '0.4rem';
 
                     hitRow.innerHTML = `
-                        <div style="color: var(--color-text-muted); margin-bottom: 0.3rem; margin-left: 0.2rem; font-size: 0.65rem;">${idx + 1}段目</div>
+                        <div style="color: var(--color-text-muted); margin-bottom: 0.3rem; margin-left: 0.2rem; font-size: 0.8rem;">${idx + 1}段目</div>
                         <div style="display: flex; flex-direction: column; gap: 0.2rem;">
                             <!-- 通常 -->
                             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 0.3rem 0.4rem; border-radius: 3px;">
-                                <span style="color: var(--color-text-muted); font-size: 0.65rem;">通常</span>
-                                <div style="display: flex; gap: 0.4rem; font-size: 0.65rem;">
+                                <span style="color: var(--color-text-muted); font-size: 0.85rem;">通常</span>
+                                <div style="display: flex; gap: 0.4rem; font-size: 0.85rem;">
                                     <span style="color: rgba(255,255,255,0.5);">物:<span style="color: white; font-weight:bold; margin-left:2px">${hit.physicalNormal}</span></span>
                                     <span style="color: rgba(0,255,255,0.3);">属:<span style="color: white; font-weight:bold; margin-left:2px">${hit.elementalNormal}</span></span>
                                     <span style="color: #ffcc00; font-weight:bold; min-width: 1.8rem; text-align:right;">${hit.totalNormal}</span>
@@ -722,8 +722,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <!-- 会心 -->
                             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,215,0,0.05); padding: 0.3rem 0.4rem; border-radius: 3px; border: 1px solid rgba(255,215,0,0.1);">
-                                <span style="color: #ffcc00; font-size: 0.65rem;">会心</span>
-                                <div style="display: flex; gap: 0.4rem; font-size: 0.65rem;">
+                                <span style="color: #ffcc00; font-size: 0.85rem;">会心</span>
+                                <div style="display: flex; gap: 0.4rem; font-size: 0.85rem;">
                                     <span style="color: rgba(255,255,255,0.6);">物:<span style="color: white; font-weight:bold; margin-left:2px">${hit.physicalCrit}</span></span>
                                     <span style="color: rgba(0,255,255,0.4);">属:<span style="color: white; font-weight:bold; margin-left:2px">${hit.elementalCrit}</span></span>
                                     <span style="color: #ffcc00; font-weight:bold; min-width: 1.8rem; text-align:right;">${hit.totalCrit}</span>

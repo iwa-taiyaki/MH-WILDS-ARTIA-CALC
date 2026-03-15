@@ -166,8 +166,6 @@ function showToast(msg) {
 function buildOCRUI(onParse) {
     const skillsSection = document.querySelector('.skills-panel');
     if (!skillsSection) return;
-    const hr = skillsSection.querySelector('hr');
-
     const section = document.createElement('div');
     section.id = 'ocr-section';
     section.style.cssText = `
@@ -198,7 +196,8 @@ function buildOCRUI(onParse) {
         </button>
     `;
 
-    if (hr) hr.insertAdjacentElement('afterend', section);
+    const title = skillsSection.querySelector('.panel-title');
+    if (title) title.insertAdjacentElement('afterend', section);
     else skillsSection.prepend(section);
 
     const textarea = section.querySelector('#ocr-text-input');
