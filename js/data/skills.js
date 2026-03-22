@@ -3305,17 +3305,20 @@ export const SKILLS = [
     "id": "skill_q0e2ai",
     "name": "攻めの守勢",
     "mainCategory": "weapon",
-    "subCategory": "utility",
+    "subCategory": "attack",
     "maxLevel": 3,
     "effects": [
       {
-        "level": 1
+        "level": 1,
+        "attackMult": 0.05
       },
       {
-        "level": 2
+        "level": 2,
+        "attackMult": 0.1
       },
       {
-        "level": 3
+        "level": 3,
+        "attackMult": 0.15
       }
     ]
   },
@@ -3613,17 +3616,20 @@ export const SKILLS = [
     "id": "skill_ex0i8v",
     "name": "鈍器使い",
     "mainCategory": "weapon",
-    "subCategory": "utility",
+    "subCategory": "attack",
     "maxLevel": 3,
     "effects": [
       {
-        "level": 1
+        "level": 1,
+        "attackMult": 0.05
       },
       {
-        "level": 2
+        "level": 2,
+        "attackMult": 0.1
       },
       {
-        "level": 3
+        "level": 3,
+        "attackMult": 0.1
       }
     ]
   },
@@ -3664,17 +3670,20 @@ export const SKILLS = [
     "id": "skill_3ule3z",
     "name": "抜刀術【力】",
     "mainCategory": "weapon",
-    "subCategory": "utility",
+    "subCategory": "attack",
     "maxLevel": 3,
     "effects": [
       {
-        "level": 1
+        "level": 1,
+        "attackAdd": 3
       },
       {
-        "level": 2
+        "level": 2,
+        "attackAdd": 5
       },
       {
-        "level": 3
+        "level": 3,
+        "attackAdd": 7
       }
     ]
   },

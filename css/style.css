@@ -170,6 +170,21 @@ label {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem 1rem;
+  /* 部分的なスクロールを有効化 */
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-right: 0.8rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+#skills-selection-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#skills-selection-list::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 10px;
 }
 
 @media (max-width: 600px) {
@@ -206,6 +221,17 @@ label {
 .skill-selector-row:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.1);
+}
+
+.skill-selector-row.selected {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: inset 0 0 10px rgba(212, 175, 55, 0.1);
+}
+
+.skill-selector-row.selected .skill-name {
+  color: var(--color-primary);
+  font-weight: bold;
 }
 
 .skill-name {

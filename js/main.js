@@ -634,6 +634,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lvl = parseInt(select.value, 10);
                 calc.setSkillLevel(skill.id, lvl);
 
+                // 行全体をハイライト
+                const row = select.closest('.skill-selector-row');
+                if (row) {
+                    row.classList.toggle('selected', lvl > 0);
+                }
+
                 if (lvl > 0) {
                     activeCount++;
                     activeSKillData.push({
@@ -1185,5 +1191,46 @@ document.addEventListener('DOMContentLoaded', () => {
             loadStateIntoUI(sharedBuild);
             alert('共有URLからビルドを読み込みました。');
         }, 100);
+    }
+
+    // 防具検索ボタン
+    const btnSearchArmor = document.getElementById('btn-search-armor');
+    if (btnSearchArmor) {
+        btnSearchArmor.addEventListener('click', () => {
+            const activeSkills = {};
+            // すべてのセレクトボックスから有効なスキルを収集
+            Object.keys(cachedSkillSelects).forEach(id => {
+                const select = cachedSkillSelects[id];
+                const lvl = parseInt(select.value, 10);
+                if (lvl > 0) activeSkills[id] = lvl;
+            });
+            
+            if (Object.keys(activeSkills).length === 0) {
+                alert('スキルが選択されていません。最低1つのスキルレベルを設定してください。');
+                return;
+            }
+
+            const params = new URLSearchParams();
+            for (const [id, lvl] of Object.entries(activeSkills)) {
+                params.append(id, lvl);
+            }
+            
+            // 武器スロット情報も追加
+            const weaponType = weaponTypeSelect.value;
+            // 武器スロットのデフォルト（Artia等）
+            params.append('weapon_type', weaponType);
+            
+            console.log('Searching armor for skills:', activeSkills);
+            const targetUrl = `asst.html?${params.toString()}`;
+            
+            // ルーティング等でパラメータが消失するケースへの対策として localStorage にも保存
+            localStorage.setItem('asst_request', JSON.stringify({
+                skills: activeSkills,
+                weaponType: weaponType,
+                timestamp: Date.now()
+            }));
+            
+            window.open(targetUrl, '_blank');
+        });
     }
 });
