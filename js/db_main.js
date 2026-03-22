@@ -1,4 +1,4 @@
-import { WEAPON_TYPES, SKILLS, EXCITATION_DATA, EXCITATION_TYPES, MONSTERS, MOTION_VALUES, ARMOR } from './data.js';
+import { WEAPON_TYPES, SKILLS, EXCITATION_DATA, EXCITATION_TYPES, MONSTERS, MOTION_VALUES, ARMOR, DECORATIONS } from './data.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -368,5 +368,133 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (arDb) arDb.innerHTML = arHtml;
     if (navArmorSublist) navArmorSublist.innerHTML = navArRarityHtml;
+    
+    // Render Decorations
+    const decDb = document.getElementById('db-decorations');
+    if (decDb && DECORATIONS && SKILLS) {
+        // スキル名からサブカテゴリへのマッピングを作成
+        const skillToSubCat = {};
+        SKILLS.forEach(s => {
+            skillToSubCat[s.name] = s.subCategory || s.mainCategory;
+        });
+
+        // 表示用のグループ定義
+        // 武器装飾品のサブグループ
+        const W_GROUPS = [
+            { id: 'w_offense', name: '攻撃系', subCats: ['attack', 'weapon'] },
+            { id: 'w_affinity', name: '会心系', subCats: ['affinity'] },
+            { id: 'w_element', name: '属性・状態異常系', subCats: ['element'] },
+            { id: 'w_ranged',  name: '弾・弓・ボウガン系', subCats: ['ammo'] },
+            { id: 'w_utility', name: '武器補助・その他', subCats: ['utility', 'series', 'group', 'armor'] }
+        ];
+
+        // 防具装飾品のサブグループ
+        const A_GROUPS = [
+            { id: 'a_offense', name: '火力・攻撃系', subCats: ['attack', 'affinity', 'weapon'] },
+            { id: 'a_defense', name: '防御・耐性・生存系', subCats: ['utility', 'armor'] },
+            { id: 'a_other',   name: 'その他・補助系', subCats: ['element', 'ammo', 'series', 'group'] }
+        ];
+
+        // データを分類
+        const weaponDecs = {};
+        const armorDecs = {};
+        
+        W_GROUPS.forEach(g => weaponDecs[g.id] = []);
+        A_GROUPS.forEach(g => armorDecs[g.id] = []);
+
+        DECORATIONS.forEach(d => {
+            // 最初に見つかったスキルのカテゴリを採用
+            let subCat = 'other';
+            for (const sk of d.sk) {
+                if (skillToSubCat[sk.n]) {
+                    subCat = skillToSubCat[sk.n];
+                    break;
+                }
+            }
+
+            if (d.t === 'w') {
+                const groupId = W_GROUPS.find(g => g.subCats.includes(subCat))?.id || 'w_utility';
+                weaponDecs[groupId].push(d);
+            } else {
+                const groupId = A_GROUPS.find(g => g.subCats.includes(subCat))?.id || 'a_other';
+                armorDecs[groupId].push(d);
+            }
+        });
+
+        const renderTable = (decs) => {
+            if (decs.length === 0) return '';
+            let html = `
+                <table class="db-table" style="min-width: 500px; margin-top: 0;">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">名称</th>
+                            <th style="width: 15%; text-align:center;">スロ</th>
+                            <th style="width: 50%;">発動スキル</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            decs.forEach(d => {
+                const skillsHtml = d.sk.map(s => `${s.n} Lv${s.l}`).join('<br>');
+                html += `
+                    <tr>
+                        <td><strong>${d.n}</strong></td>
+                        <td style="text-align:center;">[${d.sl}]</td>
+                        <td style="font-size:0.85em; line-height:1.4;">${skillsHtml}</td>
+                    </tr>`;
+            });
+            html += `</tbody></table>`;
+            return html;
+        };
+
+        let decHtml = '';
+
+        // 武器装飾品セクション
+        decHtml += `
+            <div style="background: rgba(212,175,55,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid rgba(212,175,55,0.3);">
+                <h3 style="margin-top:0; color:var(--color-accent); border-bottom: 2px solid var(--color-accent); padding-bottom:0.5rem;">
+                    <span style="font-size: 1.2rem; vertical-align: middle;">⚔️</span> 武器用装飾品
+                </h3>
+                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 1rem;">武器のスロットに装着可能な装飾品です。主に基礎火力、属性、弾強化などが含まれます。</p>`;
+        
+        W_GROUPS.forEach(group => {
+            const decs = weaponDecs[group.id];
+            if (decs.length === 0) return;
+            decHtml += `
+                <details class="db-item-details" style="margin-bottom: 0.5rem; border: 1px solid rgba(212,175,55,0.2); border-radius: 4px;" open>
+                    <summary style="padding: 0.6rem; cursor: pointer; background: rgba(212,175,55,0.05); font-weight: bold; color: var(--color-accent);">
+                        ${group.name} (${decs.length})
+                    </summary>
+                    <div style="padding: 0.5rem; background: rgba(0,0,0,0.2); overflow-x: auto;">
+                        ${renderTable(decs)}
+                    </div>
+                </details>`;
+        });
+        decHtml += `</div>`;
+
+        // 防具装飾品セクション
+        decHtml += `
+            <div style="background: rgba(55,155,212,0.1); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid rgba(55,155,212,0.3);">
+                <h3 style="margin-top:0; color:#4a90e2; border-bottom: 2px solid #4a90e2; padding-bottom:0.5rem;">
+                    <span style="font-size: 1.2rem; vertical-align: middle;">🛡️</span> 防具用装飾品
+                </h3>
+                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 1rem;">防具のスロットに装着可能な装飾品です。弱点特効、挑戦者などの強力な火力や、防御、耐性、生存スキルが含まれます。</p>`;
+        
+        A_GROUPS.forEach(group => {
+            const decs = armorDecs[group.id];
+            if (decs.length === 0) return;
+            decHtml += `
+                <details class="db-item-details" style="margin-bottom: 0.5rem; border: 1px solid rgba(55,155,212,0.2); border-radius: 4px;" open>
+                    <summary style="padding: 0.6rem; cursor: pointer; background: rgba(55,155,212,0.05); font-weight: bold; color: #4a90e2;">
+                        ${group.name} (${decs.length})
+                    </summary>
+                    <div style="padding: 0.5rem; background: rgba(0,0,0,0.2); overflow-x: auto;">
+                        ${renderTable(decs)}
+                    </div>
+                </details>`;
+        });
+        decHtml += `</div>`;
+        
+        decDb.innerHTML = decHtml;
+    }
 
 });

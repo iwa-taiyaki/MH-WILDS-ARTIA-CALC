@@ -27,6 +27,7 @@
             border-collapse: collapse;
             font-size: 0.9rem;
             margin-top: 1rem;
+            font-variant-numeric: tabular-nums;
         }
 
         .db-table th,
@@ -365,6 +366,7 @@
                         </div>
                     </details>
                 </li>
+                <li><a href="#section-decorations">装飾品</a></li>
             </ul>
             </details>
         </aside>
@@ -432,6 +434,15 @@
                         防具データ</h2>
                 </summary>
                 <div id="db-armor" style="overflow-x: auto; margin-top: 1rem;"></div>
+            </details>
+
+            <details id="section-decorations" class="db-section" open>
+                <summary style="cursor: pointer; user-select: none;">
+                    <h2 class="font-accent"
+                        style="display: inline-block; color: var(--color-primary); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom:0.5rem; margin-top: 0;">
+                        装飾品データ</h2>
+                </summary>
+                <div id="db-decorations" style="overflow-x: auto; margin-top: 1rem;"></div>
             </details>
 
         </main>
