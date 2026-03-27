@@ -229,7 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     let displayName = skill.name;
                     // リスト表示用ラベルからは末尾のローマ数字(Ⅰ, Ⅱ...)を削除して統一感を出す
                     if (skill.mainCategory === 'series' || skill.mainCategory === 'group') {
-                        displayName = displayName.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                        const prefix = skill.mainCategory === 'series' ? '[S]' : '[G]';
+                        displayName = `${prefix} ${displayName.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim()}`;
                     }
                     row.innerHTML = `
                         <div class="skill-name" title="${skill.name}">${displayName}</div>
@@ -697,8 +698,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     let displayName = "";
                     if (skill.mainCategory === 'series' || skill.mainCategory === 'group') {
-                        // シリーズ・グループスキルは効果名のみ表示（黒蝕一体Ⅰなど）
-                        displayName = effect ? effect.name : skill.name;
+                        const prefix = skill.mainCategory === 'series' ? '[S]' : '[G]';
+                        const seriesName = skill.name.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                        const effectName = effect && effect.name ? ` (${effect.name})` : '';
+                        displayName = `${prefix} ${seriesName}${effectName}`;
                     } else {
                         // 通常スキルは 名前【効果名】 LvX
                         const levelName = effect && effect.name ? `【${effect.name}】` : '';

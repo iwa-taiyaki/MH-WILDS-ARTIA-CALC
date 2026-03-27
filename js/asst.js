@@ -3,6 +3,7 @@ import { DECORATIONS } from './data/decorations.js';
 import { SKILLS } from './data/skills.js';
 import { TALISMAN_GROUPS, TALISMAN_COMBINATIONS, TALISMAN_SLOTS } from './data/talisman.js';
 import { initOCR } from './modules/ocr.js';
+import { buildSkillMatrix, sortActivatedSkills } from './result_renderer.js';
 
 const SKILL_NAME_TO_ID = Object.fromEntries(SKILLS.map(s => [s.name, s.id]));
 const SKILL_BY_ID = Object.fromEntries(SKILLS.map((s, idx) => [s.id, { ...s, originalIndex: idx }]));
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (limitLvl === undefined) {
              limitLvl = parseInt(document.getElementById(`wslot-${currentPickingSlot}`).value);
         }
-        decoList.innerHTML = '<div class="deco-pick-item none" data-did="">未選択 (クリア)</div>';
+        decoList.innerHTML = '<div class="deco-pick-item none" data-did="">自動選択 (クリア)</div>';
         const filtered = DECORATIONS.filter(d => {
             if (d.t !== 'w') return false;
             if (d.sl > limitLvl) return false;
@@ -108,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (noneBtn) {
             noneBtn.addEventListener('click', () => {
                 weaponDecos[currentPickingSlot - 1] = null;
-                document.getElementById(`wdeco-${currentPickingSlot}`).textContent = '未選択';
+                document.getElementById(`wdeco-${currentPickingSlot}`).textContent = '自動選択';
                 closePicker();
             });
         }
@@ -131,12 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentDeco = weaponDecos[idx - 1];
             if (currentDeco && currentDeco.sl > newSize) {
                 weaponDecos[idx - 1] = null;
-                document.getElementById(`wdeco-${idx}`).textContent = '未選択';
+                document.getElementById(`wdeco-${idx}`).textContent = '自動選択';
             } else if (newSize === 0) {
                 weaponDecos[idx - 1] = null;
                 document.getElementById(`wdeco-${idx}`).textContent = 'なし';
             } else if (document.getElementById(`wdeco-${idx}`).textContent === 'なし') {
-                document.getElementById(`wdeco-${idx}`).textContent = '未選択';
+                document.getElementById(`wdeco-${idx}`).textContent = '自動選択';
             }
         });
     });
@@ -231,9 +232,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let label = "";
             if (s.mainCategory === 'series' || s.mainCategory === 'group') {
-                // シリーズ・グループスキルは以前は効果名を表示していたが、
-                // 統一感のためシリーズ名/グループ名での表示に変更
-                label = s.name.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                const prefix = s.mainCategory === 'series' ? '[S]' : '[G]';
+                const seriesName = s.name.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                const lvl = targetSkills[sid];
+                const effect = (s.effects && s.effects[lvl - 1]) ? s.effects[lvl - 1] : null;
+                const effectName = effect && effect.name ? ` (${effect.name})` : '';
+                label = `${prefix} ${seriesName}${effectName}`;
             } else {
                 label = `${s.name} Lv${targetSkills[sid]}`;
             }
@@ -295,7 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     if (skill.mainCategory === 'series' || skill.mainCategory === 'group') {
-                        displayName = displayName.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                        const prefix = skill.mainCategory === 'series' ? '[S]' : '[G]';
+                        displayName = `${prefix} ${displayName.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim()}`;
                     }
                     
                     row.dataset.search = searchKeys.join('|');
@@ -384,8 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let label = "";
             if (skill.mainCategory === 'series' || skill.mainCategory === 'group') {
-                // 統一感のためシリーズ名を表示
-                label = skill.name.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                const prefix = skill.mainCategory === 'series' ? '[S]' : '[G]';
+                const seriesName = skill.name.replace(/[ⅠⅡⅢⅣⅤ]$/, '').trim();
+                const lvl = targetSkills[sid];
+                const effect = (skill.effects && skill.effects[lvl - 1]) ? skill.effects[lvl - 1] : null;
+                const effectName = effect && effect.name ? ` (${effect.name})` : '';
+                label = `${prefix} ${seriesName}${effectName}`;
             } else {
                 label = `${skill.name} Lv${targetSkills[sid]}`;
             }
@@ -767,12 +776,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (sid && targetPoints[sid]) rel[sid] = (rel[sid] || 0) + s.l;
             });
             if (a.ss) {
-                const sid = SKILL_NAME_TO_ID[a.ss];
-                if (sid && targetPoints[sid]) rel[sid] = Math.max(rel[sid] || 0, 1);
+                a.ss.split(',').forEach(sname => {
+                    const sid = SKILL_NAME_TO_ID[sname.trim()];
+                    if (sid && targetPoints[sid]) rel[sid] = Math.max(rel[sid] || 0, 1);
+                });
             }
             if (a.gs) {
-                const sid = SKILL_NAME_TO_ID[a.gs];
-                if (sid && targetPoints[sid]) rel[sid] = Math.max(rel[sid] || 0, 1);
+                a.gs.split(',').forEach(sname => {
+                    const sid = SKILL_NAME_TO_ID[sname.trim()];
+                    if (sid && targetPoints[sid]) rel[sid] = Math.max(rel[sid] || 0, 1);
+                });
             }
             armorParts[a.p].push({
                 ...a,
@@ -1137,19 +1150,29 @@ document.addEventListener('DOMContentLoaded', () => {
             function calculateFinalStats(h, c, a, w, l, t, assignment, ws, wSk, aSS, aGS) {
                 let def = (h.d || 0) + (c.d || 0) + (a.d || 0) + (w.d || 0) + (l.d || 0);
                 let res = [0, 0, 0, 0, 0];
+                const baseAtkInput = parseInt(document.getElementById('base-attack-input')?.value || "330", 10);
+                const baseAffInput = parseInt(document.getElementById('base-affinity-input')?.value || "0", 10);
+                
+                // アーティア初期設定のボーナスを加算 (+67 Atk, -15% Aff)
+                let atk = baseAtkInput + 67;
+                let aff = baseAffInput - 15;
+                let atkMult = 1.0;
+                let critMult = 1.25;
+
                 [h, c, a, w, l].forEach(p => { if (p.r) p.r.forEach((v, i) => res[i] += v); });
                 const pts = {};
                 const addP = (sid, n) => { if (sid) pts[sid] = (pts[sid] || 0) + n; };
                 [h, c, a, w, l].forEach(item => {
                     if (item.sk) item.sk.forEach(s => addP(SKILL_NAME_TO_ID[s.n], s.l));
-                    if (item.ss) { const sid = SKILL_NAME_TO_ID[item.ss]; if (sid) addP(sid, 1); }
-                    if (item.gs) { const sid = SKILL_NAME_TO_ID[item.gs]; if (sid) addP(sid, 1); }
+                    if (item.ss) { item.ss.split(',').forEach(sn => addP(SKILL_NAME_TO_ID[sn.trim()], 1)); }
+                    if (item.gs) { item.gs.split(',').forEach(sn => addP(SKILL_NAME_TO_ID[sn.trim()], 1)); }
                 });
                 Object.entries(t.skills).forEach(([sid, n]) => addP(sid, n));
                 Object.entries(wSk).forEach(([sid, n]) => { if (sid !== 'auto_ss' && sid !== 'auto_gs') addP(sid, n); });
                 if (aSS) addP(aSS, 1);
                 if (aGS) addP(aGS, 1);
                 assignment.forEach(d => { if (d.deco.sk) d.deco.sk.forEach(s => addP(SKILL_NAME_TO_ID[s.n], s.l)); });
+                
                 Object.entries(pts).forEach(([sid, n]) => {
                     const s = SKILL_BY_ID[sid];
                     if (!s) return;
@@ -1157,6 +1180,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const eff = s.effects && s.effects.find(e => e.level === lvl);
                     if (eff) {
                         if (eff.defAdd) def += eff.defAdd;
+                        if (eff.attackAdd) atk += eff.attackAdd;
+                        if (eff.atkAdd) atk += eff.atkAdd;
+                        if (eff.attackMult) atkMult *= (1 + eff.attackMult);
+                        if (eff.affinity) aff += eff.affinity;
+                        if (eff.critMultAdd) critMult += eff.critMultAdd;
                         if (eff.resAdd) {
                             const rIds = ['fire_resistance', 'water_resistance', 'thunder_resistance', 'ice_resistance', 'dragon_resistance'];
                             const idx = rIds.indexOf(sid);
@@ -1164,7 +1192,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
-                return { def, res };
+
+                const finalAtk = atk * atkMult;
+                const finalAff = aff;
+                const cr = Math.max(0, finalAff) / 100;
+                const fr = finalAff < 0 ? Math.abs(finalAff) / 100 : 0;
+                const exp = (finalAtk * (1 - cr - fr)) + (finalAtk * critMult * cr) + (finalAtk * 0.75 * fr);
+
+                return { def, res, atk: Math.floor(finalAtk), aff: finalAff, exp: Math.round(exp * 10) / 10 };
             }
 
             function finish(results, interrupted = false) {
@@ -1193,7 +1228,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const uniqueResults = [];
                 groups.forEach(vs => { vs.sort((a, b) => (a.t.rare || 5) - (b.t.rare || 5)); uniqueResults.push(vs[0]); });
 
-                if (sortType === 'def') uniqueResults.sort((a, b) => b.stats.def - a.stats.def);
+                if (sortType === 'exp') uniqueResults.sort((a, b) => b.stats.exp - a.stats.exp);
+                else if (sortType === 'def') uniqueResults.sort((a, b) => b.stats.def - a.stats.def);
                 else if (sortType.startsWith('res')) {
                     const ri = parseInt(sortType.replace('res', ''));
                     uniqueResults.sort((a, b) => b.stats.res[ri] - a.stats.res[ri]);
@@ -1356,83 +1392,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return tags.join(' ');
         };
 
-        // 計算用マトリックス
-        const matrix = {};
-        const getM = (sid) => matrix[sid] || (matrix[sid] = { weapon: 0, 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, talisman: 0, total: 0 });
-
-        Object.entries(wSkills).forEach(([sid, pts]) => {
-            if (sid === 'auto_ss' || sid === 'auto_gs') return;
-            getM(sid).weapon += pts; getM(sid).total += pts;
-        });
-        if (autoSS) { getM(autoSS).weapon += 1; getM(autoSS).total += 1; }
-        if (autoGS) { getM(autoGS).weapon += 1; getM(autoGS).total += 1; }
-        
-        assignment.forEach(a => {
-            if (a.deco.sk) a.deco.sk.forEach(s => {
-                const sid = SKILL_NAME_TO_ID[s.n];
-                if (sid) {
-                    if (a.piece === 'weapon') getM(sid).weapon += s.l;
-                    else if (a.piece === 'talisman') getM(sid).talisman += s.l;
-                    else getM(sid)[a.piece] += s.l;
-                    getM(sid).total += s.l;
-                }
-            });
-        });
-
-        armorItems.forEach((item, idx) => {
-            if (item.sk) item.sk.forEach(s => { const sid = SKILL_NAME_TO_ID[s.n]; if (sid) { getM(sid)[idx] += s.l; getM(sid).total += s.l; } });
-            if (item.ss) { const sid = SKILL_NAME_TO_ID[item.ss]; if (sid) { getM(sid)[idx] += 1; getM(sid).total += 1; } }
-            if (item.gs) { const sid = SKILL_NAME_TO_ID[item.gs]; if (sid) { getM(sid)[idx] += 1; getM(sid).total += 1; } }
-        });
-
-        Object.entries(t.skills).forEach(([sid, pts]) => { getM(sid).talisman += pts; getM(sid).total += pts; });
-
-        // 表示用スキルの抽出
-        const activatedRows = Object.keys(matrix).filter(sid => {
-            const s = SKILL_BY_ID[sid];
-            if (s.mainCategory === 'series') return matrix[sid].total >= 2;
-            if (s.mainCategory === 'group') return matrix[sid].total >= 3; // 3点以上でリストに出す
-            return matrix[sid].total > 0;
-        }).map(sid => {
-            const s = SKILL_BY_ID[sid];
-            const m = matrix[sid];
-            let name = s.name;
-            let lvl = Math.min(m.total, s.maxLevel || 10);
-            let lvlText = `Lv${lvl}`;
-
-            if (s.mainCategory === 'series') {
-                const slvl = (m.total >= 4) ? 2 : (m.total >= 2 ? 1 : 0);
-                const effect = s.effects.find(e => e.level === slvl);
-                name = effect ? effect.name : s.name;
-                lvlText = `Lv${slvl}`;
-                lvl = slvl;
-            } else if (s.mainCategory === 'group') {
-                if (m.total >= 3) {
-                    name = s.effects[0].name;
-                    lvlText = "Lv1";
-                } else {
-                    name = s.name + " (未発動)";
-                    lvlText = "-";
-                }
-                lvl = (m.total >= 3) ? 1 : 0;
-            }
-            return { id: sid, name, lvl, lvlText, cat: s.mainCategory || 'support', m };
-        }).sort((a,b) => {
-            const sA = SKILL_BY_ID[a.id];
-            const sB = SKILL_BY_ID[b.id];
-            
-            // 1. カテゴリ優先度 (weapon:1, armor:2, series:3, group:4)
-            const catPoints = { 'weapon': 1, 'armor': 2, 'series': 3, 'group': 4, 'support': 2, 'resistance': 2 };
-            const pA = catPoints[a.cat] || 2;
-            const pB = catPoints[b.cat] || 2;
-            if (pA !== pB) return pA - pB;
-            
-            // 2. レベル優先度 (降順)
-            if (a.lvl !== b.lvl) return b.lvl - a.lvl;
-            
-            // 3. 内部定義順 (昇順)
-            return (sA.originalIndex || 0) - (sB.originalIndex || 0);
-        });
+        // 合計集計とソート (共有ロジックを使用)
+        const matrix = buildSkillMatrix({ h, c, a, w, l, t }, wSkills, assignment, SKILL_NAME_TO_ID, autoSS, autoGS);
+        const activatedRows = sortActivatedSkills(matrix, SKILLS, SKILL_BY_ID);
 
         const renderVal = (v) => v > 0 ? v : '<span class="empty-cell">-</span>';
 
@@ -1440,6 +1402,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="result-header">
                 <h1 class="set-id-tag">SET #${idx}</h1>
                 <div class="defense-info">
+                    期待値: <span class="stat-val" style="color:var(--accent-color)">${stats.exp}</span> &nbsp;
+                    攻撃力: <span class="stat-val">${stats.atk}</span> &nbsp; 会心率: <span class="stat-val">${stats.aff}%</span> &nbsp;
                     防御力: <span class="stat-val">${stats.def}</span> &nbsp; 耐性: <span class="stat-val">${stats.res[0]} / ${stats.res[1]} / ${stats.res[2]} / ${stats.res[3]} / ${stats.res[4]}</span>
                 </div>
             </div>
@@ -1512,8 +1476,128 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'btn btn-save-set';
+        saveBtn.style.cssText = 'margin-left: auto; font-size: 0.7rem; padding: 4px 10px; background: rgba(0, 255, 127, 0.1); border: 1px solid rgba(0, 255, 127, 0.3); color: #00ff7f;';
+        saveBtn.textContent = 'セット保存';
+        saveBtn.onclick = () => {
+            const setName = prompt('マイセット（計算機と共有）としての保存名を入力してください:', `セット#${idx}`);
+            if (!setName) return;
+            
+            const sets = JSON.parse(localStorage.getItem('mhwilds_mysets') || '{}');
+            // 計算機ページ(main.js)の形式に合わせてデータを構成
+            const data = {
+                currentSkillLevels: { ...target },
+                weaponTypeId: document.getElementById('weapon-type-select')?.value || 'gs',
+                timestamp: Date.now(),
+                // アーティア初期設定 (最強攻撃構成)
+                excitationType: 'attack',
+                parts: ['attack', 'attack', 'attack'],
+                bonuses: ['atk_3', 'atk_3', 'atk_ex', 'atk_ex', 'sharp_load_ex'],
+                asst_build_data: {
+                    h: h.n, c: c.n, a: a.n, w: w.n, l: l.n, t: t.name,
+                    decos: assignment.map(d => ({ n: d.deco.name, p: d.piece })),
+                    autoSS: autoSS, autoGS: autoGS
+                }
+            };
+            sets[setName] = data;
+            localStorage.setItem('mhwilds_mysets', JSON.stringify(sets));
+            updateMySetList();
+            alert(`「${setName}」を計算機ページのマイセットとして保存しました。`);
+        };
+        card.querySelector('.result-header').appendChild(saveBtn);
+
         resultsContainer.appendChild(card);
     }
 
+    // --- MySet System (Shared with Calculator) ---
+    const MYSET_STORAGE_KEY = 'mhwilds_mysets';
+    let currentLoadedMySetName = null;
+
+    function getMySets() {
+        try { return JSON.parse(localStorage.getItem(MYSET_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+    }
+
+    function updateMySetList() {
+        const mySetList = document.getElementById('myset-list');
+        const display = document.getElementById('current-myset-display');
+        if (!mySetList) return;
+        const sets = getMySets();
+        mySetList.innerHTML = '<option value="">マイセット選択...</option>';
+        Object.keys(sets).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            mySetList.appendChild(opt);
+        });
+        if (currentLoadedMySetName) {
+            mySetList.value = currentLoadedMySetName;
+            display.textContent = currentLoadedMySetName;
+        } else {
+            display.textContent = '(未保存)';
+        }
+    }
+
+    document.getElementById('btn-load-myset')?.addEventListener('click', () => {
+        const name = document.getElementById('myset-list').value;
+        if (!name) return;
+        const sets = getMySets();
+        const data = sets[name];
+        if (!data || (!data.currentSkillLevels && !data.skills)) return;
+
+        // スキル選択状態をリセット (物理的・内部的)
+        Object.keys(targetSkills).forEach(sid => delete targetSkills[sid]);
+        Object.values(cachedSkillSelects).forEach(s => {
+            s.value = 0;
+            s.closest('.skill-selector-row')?.classList.remove('selected');
+        });
+        
+        // 保存されたスキルを適用
+        const skillData = data.currentSkillLevels || data.skills || {};
+        Object.entries(skillData).forEach(([sid, lvl]) => {
+            if (cachedSkillSelects[sid]) {
+                const sel = cachedSkillSelects[sid];
+                sel.value = lvl;
+                if (lvl > 0) {
+                    sel.closest('.skill-selector-row')?.classList.add('selected');
+                    targetSkills[sid] = lvl;
+                }
+            }
+        });
+        
+        currentLoadedMySetName = name;
+        updateMySetList();
+        updateActiveSkillsUI();
+        updateTargetSummary();
+        alert(`マイセット「${name}」のスキル構成を読み込みました。`);
+        // 読込時に自動検索は行わない（反映のみ）
+    });
+
+    document.getElementById('btn-save-myset')?.addEventListener('click', () => {
+        const name = prompt('現在の検索条件（スキル構成）をマイセットとして保存します。名前を入力してください:', currentLoadedMySetName || '');
+        if (!name) return;
+        const sets = getMySets();
+        sets[name] = {
+            currentSkillLevels: { ...targetSkills },
+            timestamp: Date.now()
+        };
+        localStorage.setItem(MYSET_STORAGE_KEY, JSON.stringify(sets));
+        currentLoadedMySetName = name;
+        updateMySetList();
+        alert(`「${name}」を保存しました。計算機ページでも読み込み可能です。`);
+    });
+
+    document.getElementById('btn-delete-myset')?.addEventListener('click', () => {
+        const name = document.getElementById('myset-list').value;
+        if (!name || !confirm(`マイセット「${name}」を削除しますか？`)) return;
+        const sets = getMySets();
+        delete sets[name];
+        localStorage.setItem(MYSET_STORAGE_KEY, JSON.stringify(sets));
+        if (currentLoadedMySetName === name) currentLoadedMySetName = null;
+        updateMySetList();
+    });
+
+    updateMySetList();
 
 });
+

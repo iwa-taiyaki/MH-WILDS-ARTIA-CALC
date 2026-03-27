@@ -2617,7 +2617,7 @@ export const SKILLS = [
   },
   {
     "id": "power_proud",
-    "name": "闘獣の力",
+    "name": "闢獣の力",
     "mainCategory": "series",
     "subCategory": null,
     "maxLevel": 2,
@@ -2777,7 +2777,7 @@ export const SKILLS = [
   },
   {
     "id": "hell_octopus_rebellion",
-    "name": "獄焔蜻の反逆",
+    "name": "獄焔蛸の反逆",
     "mainCategory": "series",
     "subCategory": null,
     "maxLevel": 2,

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ビルド検証シミュレーター | MHWilds Simulation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/results.css">
+    <style>
+        :root {
+            --bg-color: #0c111d;
+            --panel-bg: #141a26;
+            --accent-color: #ffcc00;
+            --border-color: #2a3448;
+            --font-serif: 'Times New Roman', "MS Mincho", serif;
+            --font-main: 'Outfit', sans-serif;
+            --weapon-color: #66ccff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #eee;
+            font-family: var(--font-main);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            overflow-x: hidden;
+        }
+
+        .builder-layout {
+            display: grid;
+            grid-template-columns: 420px 1040px;
+            gap: 40px;
+            align-items: start;
+            width: fit-content;
+        }
+
+        .input-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 4px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            position: sticky;
+            top: 20px;
+        }
+
+        .input-title {
+            font-family: var(--font-serif);
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .part-group {
+            margin-bottom: 20px;
+        }
+
+        .part-label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 6px;
+        }
+
+        .part-selector {
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .deco-slots-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .deco-picker {
+            width: 100%;
+            padding: 4px;
+            background: #111;
+            border: 1px solid #333;
+            color: #b0c4de;
+            font-size: 0.75rem;
+            border-radius: 2px;
+        }
+
+        .header-nav {
+            width: 100%;
+            max-width: 1500px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .back-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .saved-sets-manager {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid var(--border-color);
+        }
+
+        .save-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .save-input {
+            flex: 1;
+            padding: 8px;
+            background: #000;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .btn-save {
+            padding: 8px 16px;
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-save:hover { background: #e6b800; }
+
+        .saved-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .saved-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .saved-item:hover { background: rgba(255,255,255,0.08); }
+
+        .btn-del {
+            background: transparent;
+            border: none;
+            color: #ff4444;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 8px;
+        }
+
+        .btn-del:hover { color: #ff6666; }
+
+        ::-webkit-scrollbar { width: 6px; }
+
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="header-nav">
+        <h1 style="font-family: var(--font-serif); letter-spacing: 4px; margin: 0;">BUILD VERIFIER</h1>
+        <a href="asst.html" class="back-link">← 自動検索(ASST)へ</a>
+    </div>
+
+    <div class="builder-layout">
+        <div class="input-panel">
+            <h2 class="input-title">EQUIPMENT CHOICE</h2>
+            
+            <div id="builder-inputs">
+                <!-- Head, Chest, Arms, Waist, Legs, Weapon, Talisman -->
+                <div class="part-group">
+                    <label class="part-label">武器</label>
+                    <div style="margin-bottom:10px;">
+                        <select class="part-selector" id="w-ss"><option value="">-- シリーズスキル補助 --</option></select>
+                        <select class="part-selector" id="w-gs" style="margin-top:5px;"><option value="">-- グループスキル補助 --</option></select>
+                    </div>
+                    <div class="deco-slots-area">
+                        <select class="deco-picker" id="wDeco-0"></select>
+                        <select class="deco-picker" id="wDeco-1"></select>
+                        <select class="deco-picker" id="wDeco-2"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="saved-sets-manager">
+                <h3 class="part-label">SAVED SETS</h3>
+                <div class="save-input-row">
+                    <input type="text" id="save-name" class="save-input" placeholder="セット名を入力...">
+                    <button id="btn-save-current" class="btn-save">保存</button>
+                </div>
+                <ul id="saved-sets-list" class="saved-list">
+                    <!-- Saved items will appear here -->
+                </ul>
+            </div>
+        </div>
+
+        <div id="results-container"></div>
+    </div>
+
+    <script type="module">
+        import { ARMOR } from './js/data/armor.js';
+        import { DECORATIONS } from './js/data/decorations.js';
+        import { SKILLS } from './js/data/skills.js';
+        import { buildSkillMatrix, sortActivatedSkills } from './js/result_renderer.js';
+
+        const SKILL_NAME_TO_ID = Object.fromEntries(SKILLS.map(s => [s.name, s.id]));
+        const SKILL_BY_ID = Object.fromEntries(SKILLS.map(s => [s.id, s]));
+
+        const parts = [
+            { key: 'h', label: '頭', type: 'head' },
+            { key: 'c', label: '胴', type: 'chest' },
+            { key: 'a', label: '腕', type: 'arms' },
+            { key: 'w', label: '腰', type: 'waist' },
+            { key: 'l', label: '脚', type: 'legs' }
+        ];
+
+        let state = {
+            h: null, c: null, a: null, w: null, l: null,
+            hDe: [null, null, null],
+            cDe: [null, null, null],
+            aDe: [null, null, null],
+            wDe: [null, null, null],
+            lDe: [null, null, null],
+            weapon: { name: "巨戟アーティア", ss: null, gs: null, decos: [null, null, null] },
+            talisman: { skills: {} }
+        };
+
+        function init() {
+            const container = document.getElementById('builder-inputs');
+            
+            parts.forEach(p => {
+                const list = ARMOR.filter(a => a.p === p.type).sort((a,b) => a.n.localeCompare(b.n));
+                const div = document.createElement('div');
+                div.className = 'part-group';
+                div.innerHTML = `
+                    <label class="part-label">${p.label}</label>
+                    <select class="part-selector" id="select-${p.key}">
+                        <option value="">-- 未選択 --</option>
+                        ${list.map(a => `<option value="${a.n}">${a.n}</option>`).join('')}
+                    </select>
+                    <div class="deco-slots-area" id="slots-${p.key}"></div>
+                `;
+                container.appendChild(div);
+            });
+
+            // 護石
+            const tDiv = document.createElement('div');
+            tDiv.className = 'part-group';
+            tDiv.innerHTML = `
+                <label class="part-label">護石スキル</label>
+                <select class="part-selector" id="t-s1"><option value="">-- スキル 1 --</option>${SKILLS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+                <select class="part-selector" id="t-v1" style="margin-top:5px; color:var(--accent-color);"><option value="0">Lv0</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select>
+                <select class="part-selector" id="t-s2" style="margin-top:10px;"><option value="">-- スキル 2 --</option>${SKILLS.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}</select>
+                <select class="part-selector" id="t-v2" style="margin-top:5px; color:var(--accent-color);"><option value="0">Lv0</option><option value="1">Lv1</option><option value="2">Lv2</option><option value="3">Lv3</option></select>
+            `;
+            container.appendChild(tDiv);
+
+            updateDecoList(document.getElementById('wDeco-0'), 3);
+            updateDecoList(document.getElementById('wDeco-1'), 3);
+            updateDecoList(document.getElementById('wDeco-2'), 3);
+
+            // シリーズ・グループスキルリスト
+            const ssList = SKILLS.filter(s => s.mainCategory === 'series').sort((a,b) => a.name.localeCompare(b.name));
+            const gsList = SKILLS.filter(s => s.mainCategory === 'group').sort((a,b) => a.name.localeCompare(b.name));
+            
+            const ssSel = document.getElementById('w-ss');
+            const gsSel = document.getElementById('w-gs');
+            ssSel.innerHTML = '<option value="">-- シリーズスキル補助 --</option>' + ssList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            gsSel.innerHTML = '<option value="">-- グループスキル補助 --</option>' + gsList.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            attachEvents();
+            refreshSavedList();
+            update();
+        }
+
+        function refreshSavedList() {
+            const list = JSON.parse(localStorage.getItem('saved_build_sets') || '{}');
+            const ul = document.getElementById('saved-sets-list');
+            ul.innerHTML = "";
+            Object.keys(list).sort().forEach(name => {
+                const li = document.createElement('li');
+                li.className = 'saved-item';
+                li.innerHTML = `<span>${name}</span> <button class="btn-del" title="削除">×</button>`;
+                li.onclick = (e) => {
+                    if (e.target.className === 'btn-del') {
+                        deleteSet(name);
+                    } else {
+                        loadSet(name);
+                    }
+                };
+                ul.appendChild(li);
+            });
+        }
+
+        function saveCurrentSet() {
+            const name = document.getElementById('save-name').value.trim();
+            if (!name) { alert("保存名を入力してください"); return; }
+            
+            const sets = JSON.parse(localStorage.getItem('saved_build_sets') || '{}');
+            const data = {
+                h: state.h ? state.h.n : null,
+                c: state.c ? state.c.n : null,
+                a: state.a ? state.a.n : null,
+                w: state.w ? state.w.n : null,
+                l: state.l ? state.l.n : null,
+                hDe: state.hDe.map(d => d ? d.n : null),
+                cDe: state.cDe.map(d => d ? d.n : null),
+                aDe: state.aDe.map(d => d ? d.n : null),
+                wDe: state.wDe.map(d => d ? d.n : null),
+                lDe: state.lDe.map(d => d ? d.n : null),
+                weapon: { decos: state.weapon.decos.map(d => d ? d.n : null) },
+                talisman: { skills: state.talisman.skills }
+            };
+            
+            sets[name] = data;
+            sets[name].weapon.ss = state.weapon.ss;
+            sets[name].weapon.gs = state.weapon.gs;
+            localStorage.setItem('saved_build_sets', JSON.stringify(sets));
+            refreshSavedList();
+            alert("「" + name + "」を保存しました。");
+        }
+
+        function loadSet(name) {
+            const sets = JSON.parse(localStorage.getItem('saved_build_sets') || '{}');
+            const data = sets[name];
+            if (!data) return;
+
+            // Reset state and sync UI
+            document.getElementById('save-name').value = name;
+            
+            parts.forEach(p => {
+                const sel = document.getElementById(`select-${p.key}`);
+                sel.value = data[p.key] || "";
+                state[p.key] = ARMOR.find(a => a.n === sel.value) || null;
+                renderSlots(p.key);
+                
+                // Load Decos
+                const decoNames = data[p.key + 'De'] || [];
+                decoNames.forEach((dn, idx) => {
+                    const dSel = document.getElementById(`deco-${p.key}-${idx}`);
+                    if (dSel) {
+                        dSel.value = dn || "";
+                        state[p.key + 'De'][idx] = DECORATIONS.find(d => d.n === (dn || "")) || null;
+                    }
+                });
+            });
+
+            // Weapon
+            state.weapon.ss = data.weapon.ss || null;
+            state.weapon.gs = data.weapon.gs || null;
+            document.getElementById('w-ss').value = state.weapon.ss || "";
+            document.getElementById('w-gs').value = state.weapon.gs || "";
+
+            data.weapon.decos.forEach((dn, i) => {
+                const sel = document.getElementById(`wDeco-${i}`);
+                sel.value = dn || "";
+                state.weapon.decos[i] = DECORATIONS.find(d => d.n === (dn || "")) || null;
+            });
+
+            // Talisman
+            state.talisman.skills = data.talisman.skills || {};
+            const keys = Object.keys(state.talisman.skills);
+            document.getElementById('t-s1').value = keys[0] || "";
+            document.getElementById('t-v1').value = state.talisman.skills[keys[0]] || 0;
+            document.getElementById('t-s2').value = keys[1] || "";
+            document.getElementById('t-v2').value = state.talisman.skills[keys[1]] || 0;
+
+            update();
+        }
+
+        function deleteSet(name) {
+            if (!confirm(name + " を削除しますか？")) return;
+            const sets = JSON.parse(localStorage.getItem('saved_build_sets') || '{}');
+            delete sets[name];
+            localStorage.setItem('saved_build_sets', JSON.stringify(sets));
+            refreshSavedList();
+        }
+
+        function updateDecoList(el, size) {
+            const allDecos = DECORATIONS.filter(d => d.sl <= size).sort((a,b) => b.sl - a.sl || a.n.localeCompare(b.n));
+            el.innerHTML = '<option value="">-- 装飾品 --</option>' + allDecos.map(d => `<option value="${d.n}">[${d.sl}] ${d.n}</option>`).join('');
+        }
+
+        function attachEvents() {
+            parts.forEach(p => {
+                document.getElementById(`select-${p.key}`).onchange = (e) => {
+                    const armor = ARMOR.find(a => a.n === e.target.value);
+                    state[p.key] = armor || null;
+                    renderSlots(p.key);
+                    update();
+                };
+            });
+
+            [0,1,2].forEach(i => {
+                document.getElementById(`wDeco-${i}`).onchange = (e) => {
+                    state.weapon.decos[i] = DECORATIONS.find(d => d.n === e.target.value) || null;
+                    update();
+                };
+            });
+
+            document.getElementById('w-ss').onchange = (e) => {
+                state.weapon.ss = e.target.value || null;
+                update();
+            };
+            document.getElementById('w-gs').onchange = (e) => {
+                state.weapon.gs = e.target.value || null;
+                update();
+            };
+
+            ['t-s1','t-v1','t-s2','t-v2'].forEach(id => {
+                document.getElementById(id).onchange = () => {
+                    const s1 = document.getElementById('t-s1').value;
+                    const v1 = parseInt(document.getElementById('t-v1').value);
+                    const s2 = document.getElementById('t-s2').value;
+                    const v2 = parseInt(document.getElementById('t-v2').value);
+                    state.talisman.skills = {};
+                    if (s1 && v1 > 0) state.talisman.skills[s1] = v1;
+                    if (s2 && v2 > 0) state.talisman.skills[s2] = v2;
+                    update();
+                };
+            });
+
+            document.getElementById('btn-save-current').onclick = saveCurrentSet;
+        }
+
+        function renderSlots(key) {
+            const area = document.getElementById(`slots-${key}`);
+            const armor = state[key];
+            if (!armor || !armor.slots) { area.innerHTML = ""; return; }
+            area.innerHTML = armor.slots.filter(s => s > 0).map((s, i) => `<select class="deco-picker" id="deco-${key}-${i}" data-size="${s}"></select>`).join('');
+            area.querySelectorAll('.deco-picker').forEach(sel => {
+                updateDecoList(sel, parseInt(sel.dataset.size));
+                sel.onchange = (e) => {
+                    const idx = parseInt(e.target.id.split('-').pop());
+                    state[key + 'De'][idx] = DECORATIONS.find(d => d.n === e.target.value) || null;
+                    update();
+                };
+            });
+        }
+
+        function update() {
+            let totalDef = 0; let totalRes = [0,0,0,0,0];
+            [state.h, state.c, state.a, state.w, state.l].forEach(a => { if (a) { totalDef += (a.d || 0); a.r.forEach((v, i) => totalRes[i] += v); } });
+            const assignment = [];
+            [[state.weapon.decos, 'weapon'], [state.hDe, 0], [state.cDe, 1], [state.aDe, 2], [state.wDe, 3], [state.lDe, 4]].forEach(([decos, pid]) => {
+                decos.forEach(d => { if (d) assignment.push({ piece: pid, deco: { name: d.n, sk: d.sk, sl: d.sl } }); });
+            });
+            renderFinalCard(totalDef, totalRes, assignment);
+        }
+
+        function renderFinalCard(def, res, assignment) {
+            const container = document.getElementById('results-container');
+            const h = state.h || { n: "----", sk: [], d: 0, r:[0,0,0,0,0] };
+            const c = state.c || { n: "----", sk: [], d: 0, r:[0,0,0,0,0] };
+            const a = state.a || { n: "----", sk: [], d: 0, r:[0,0,0,0,0] };
+            const w = state.w || { n: "----", sk: [], d: 0, r:[0,0,0,0,0] };
+            const l = state.l || { n: "----", sk: [], d: 0, r:[0,0,0,0,0] };
+            const t = state.talisman;
+
+            const matrix = buildSkillMatrix({ h, c, a, w, l, t }, {}, assignment, SKILL_NAME_TO_ID, state.weapon.ss, state.weapon.gs);
+            const activatedRows = sortActivatedSkills(matrix, SKILLS, SKILL_BY_ID);
+
+            const getDecosHtml = (pid) => assignment.filter(d => d.piece === pid).map(d => `<div class="slots-row"><span class="slot-box">[${d.deco.sl}]</span> <span class="deco-label">${d.deco.name}</span></div>`).join('');
+            const getPieceHtml = (l, n, item, pid) => {
+                const tags = [];
+                if (item.sk) item.sk.forEach(s => tags.push(`<span class="piece-skill-label">${s.n} Lv${s.l}</span>`));
+                if (item.ss) tags.push(`<span class="piece-skill-label special-ss">[S] ${item.ss}</span>`);
+                if (item.gs) tags.push(`<span class="piece-skill-label special-gs">[G] ${item.gs}</span>`);
+                return `<div class="equip-item"><div class="equip-label">${l}</div><div class="equip-name">${n}</div><div class="equip-sub">防: ${item.d || '--'} 耐: ${item.r?.join('/') || '--/--/--/--/--'}</div><div class="native-skills">${tags.join(' ')}</div><div class="slots-stack">${getDecosHtml(pid)}</div></div>`;
+            };
+
+            const weaponSkillsTags = [];
+            if (state.weapon.ss) weaponSkillsTags.push(`<span class="piece-skill-label special-ss">[S] ${SKILL_BY_ID[state.weapon.ss].name}</span>`);
+            if (state.weapon.gs) weaponSkillsTags.push(`<span class="piece-skill-label special-gs">[G] ${SKILL_BY_ID[state.weapon.gs].name}</span>`);
+
+            container.innerHTML = `
+                <div class="result-card">
+                    <div class="result-header"><h1 class="set-id-tag">BUILD VERIFY</h1><div class="defense-info">防御力: <span class="stat-val">${def}</span> &nbsp; 耐性: <span class="stat-val">${res.join(' / ')}</span></div></div>
+                    <div class="result-body">
+                        <div class="equipment-list">
+                            <div class="equip-item">
+                                <div class="equip-label">武</div>
+                                <div class="equip-name">巨戟アーティア</div>
+                                <div class="native-skills">${weaponSkillsTags.join(' ')}</div>
+                                <div class="slots-stack">${getDecosHtml('weapon')}</div>
+                            </div>
+                            ${getPieceHtml("頭", h.n, h, 0)} ${getPieceHtml("胴", c.n, c, 1)} ${getPieceHtml("腕", a.n, a, 2)} ${getPieceHtml("腰", w.n, w, 3)} ${getPieceHtml("脚", l.n, l, 4)}
+                            ${getPieceHtml("石", "カスタム護石", {d:0, r:[0,0,0,0,0], sk: Object.entries(t.skills).map(([sid,pts])=>({n:SKILL_BY_ID[sid].name, l:pts}))}, 'talisman')}
+                        </div>
+                        <div class="totals-panel">
+                            <table class="skill-table">
+                                <thead><tr><th class="skill-name-cell">スキル合計</th><th>武</th><th>頭</th><th>胴</th><th>腕</th><th>腰</th><th>脚</th><th>石</th><th style="color:var(--skill-lv-color)">計</th></tr></thead>
+                                <tbody>${activatedRows.map(row => `<tr><td class="skill-name-cell">${row.name}</td><td>${row.m.weapon||'-'}</td><td>${row.m[0]||'-'}</td><td>${row.m[1]||'-'}</td><td>${row.m[2]||'-'}</td><td>${row.m[3]||'-'}</td><td>${row.m[4]||'-'}</td><td>${row.m.talisman||'-'}</td><td class="total-cell">${row.lvlText}</td></tr>`).join('')}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+        }
+        init();
+    </script>
+</body>
+</html>

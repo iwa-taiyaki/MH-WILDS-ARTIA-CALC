@@ -64,7 +64,6 @@ export const TALISMAN_GROUPS = {
         { name: "水属性攻撃強化", level: 2 },
         { name: "氷属性攻撃強化", level: 2 },
         { name: "減気ビン追加", level: 1 },
-        { name: "溜め短縮", level: 1 },
         { name: "火属性攻撃強化", level: 2 },
         { name: "爆破ビン追加", level: 1 },
         { name: "爆破属性強化", level: 2 },

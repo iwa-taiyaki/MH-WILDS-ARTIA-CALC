@@ -1,0 +1,159 @@
+/* shared results styles */
+.result-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    max-width: 1040px;
+    margin: 0 auto;
+}
+
+.result-header {
+    padding: 12px 30px;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    background: transparent;
+}
+
+.set-id-tag {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--accent-color);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: var(--font-serif);
+}
+
+.defense-info {
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+    color: #ccc;
+    font-family: var(--font-serif);
+}
+
+.result-body {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 40px;
+}
+
+@media (max-width: 768px) {
+    .result-body {
+        grid-template-columns: 1fr;
+    }
+}
+
+.equipment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.equip-item {
+    position: relative;
+    padding-left: 15px;
+    border-left: 3px solid transparent;
+}
+
+.equip-label {
+    position: absolute;
+    left: -25px;
+    top: 4px;
+    color: var(--weapon-color);
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.equip-name {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #fff;
+    font-family: var(--font-serif);
+}
+
+.equip-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-family: var(--font-serif);
+}
+
+.native-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    font-family: var(--font-serif);
+}
+
+.piece-skill-label { color: #ccc; }
+.special-ss { color: var(--color-series); }
+.special-gs { color: var(--color-group); }
+
+.slots-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.slot-box {
+    background: #000;
+    padding: 1px 6px;
+    border: 1px solid #555;
+    border-radius: 3px;
+    color: var(--accent-color);
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.deco-label {
+    color: #b0c4de;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(176, 196, 222, 0.3);
+}
+
+.skill-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    font-family: var(--font-serif);
+}
+
+.skill-table th {
+    text-align: center;
+    border-bottom: 2px solid var(--border-color);
+    padding: 10px 5px;
+    color: var(--weapon-color);
+    font-weight: normal;
+}
+
+.skill-table td {
+    padding: 8px 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.skill-table .skill-name-cell {
+    text-align: left;
+    font-weight: bold;
+    color: #fff;
+    padding-left: 10px;
+}
+
+.total-cell {
+    color: var(--skill-lv-color);
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.val-none { color: #333; }
+.empty-cell { color: #333; }
